@@ -150,7 +150,13 @@ return [
             'url' => '/product'
         ],
 
-    
+        [
+            'text' => 'PPP',
+            'icon' => 'ti ti-shopping-cart',
+            'url' => '/ppp'
+        ],
+        
+        
 
         
 

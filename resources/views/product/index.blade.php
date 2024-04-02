@@ -4,6 +4,10 @@
     Product
 @endsection
 
+@section('scripts')
+    <script src="{{ asset('../../js/app.js') }}"></script>
+@endsection
+
 @section('content')
     <!-- Page header -->
     <div class="page-header d-print-none">
@@ -37,7 +41,7 @@
 
                 <div class="col-12 col-md-auto ms-auto d-print-none">
                     <div class="btn-list">
-                        <a href="{{ route('product.create') }}" class="btn btn-primary d-none d-sm-inline-block">
+                        <button class="btn btn-primary d-none d-sm-inline-block" onclick="toggleUploadForm()">
                             <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
                             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
                                 viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
@@ -46,8 +50,12 @@
                                 <line x1="12" y1="5" x2="12" y2="19" />
                                 <line x1="5" y1="12" x2="19" y2="12" />
                             </svg>
-                            CVS
-                        </a>
+                            CSV
+                        </button>
+                        <div id="uploadForm" style="display: none;">
+                            <input type="file" id="csvFile" accept=".csv" />
+                            <button class="btn btn-primary" onclick="uploadCsv()">Subir CSV</button>
+                        </div>
                     </div>
                 </div>
 

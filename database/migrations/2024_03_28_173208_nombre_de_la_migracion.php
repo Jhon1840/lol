@@ -19,16 +19,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::create('products', function (Blueprint $table) {
-            $table->id();
-            $table ->string('Nombre');
-            $table ->string('Descripcion');
-            $table ->string('Proveedor');
-            $table->integer('stock');
-            $table ->decimal('Precio_venta',15,2);
-            
-            $table ->decimal('Precio_compra',15,2);
-            $table->timestamps();
-        });
+        
     }
 };
