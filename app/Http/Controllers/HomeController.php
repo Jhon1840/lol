@@ -26,8 +26,12 @@ class HomeController extends Controller
         return view('home');
     }
 
+    public function venta()
+    {
+        return view('ventas\venta');
+    }
     public function ppp()
     {
-        return view('ppp');
+        return view('home');
     }
 }

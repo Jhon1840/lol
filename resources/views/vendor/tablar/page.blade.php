@@ -9,10 +9,9 @@
 
 @section('classes_body', $layoutHelper->makeBodyClasses())
 
-@includeIf('tablar::layouts.'. config('tablar.layout'))
+@includeIf('tablar::layouts.' . config('tablar.layout'))
 
 @section('tablar_js')
     @stack('js')
     @yield('js')
 @stop
-

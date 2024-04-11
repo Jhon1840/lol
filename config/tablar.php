@@ -155,6 +155,13 @@ return [
             'icon' => 'ti ti-shopping-cart',
             'url' => '/ppp'
         ],
+
+        [
+            'text' => 'Venta',
+            
+            'icon' => 'ti ti-brand-cashapp',
+            'url' => '/ventas'
+        ],
         
         
 

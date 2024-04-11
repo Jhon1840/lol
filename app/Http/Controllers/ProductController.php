@@ -6,6 +6,9 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 
 namespace App\Http\Controllers;
+//excel
+use App\Exports\ProductsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -23,6 +26,9 @@ class ProductController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+
+   
+
     public function index()
     {
         $products = Product::paginate(10);
@@ -30,6 +36,8 @@ class ProductController extends Controller
         return view('product.index', compact('products'))
             ->with('i', (request()->input('page', 1) - 1) * $products->perPage());
     }
+
+    
 
     /**
      * Show the form for creating a new resource.

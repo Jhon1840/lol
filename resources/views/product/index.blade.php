@@ -16,10 +16,10 @@
                 <div class="col">
                     <!-- Page pre-title -->
                     <div class="page-pretitle">
-                        List
+                        Lista de
                     </div>
                     <h2 class="page-title">
-                        {{ __('Product ') }}
+                        {{ __('Productos ') }}
                     </h2>
                 </div>
                 <!-- Page title actions -->
@@ -34,30 +34,26 @@
                                 <line x1="12" y1="5" x2="12" y2="19" />
                                 <line x1="5" y1="12" x2="19" y2="12" />
                             </svg>
-                            Create Product
+                            Cargar producto
                         </a>
                     </div>
                 </div>
 
-                <div class="col-12 col-md-auto ms-auto d-print-none">
-                    <div class="btn-list">
-                        <button class="btn btn-primary d-none d-sm-inline-block" onclick="toggleUploadForm()">
-                            <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
-                                viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
-                                stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <line x1="12" y1="5" x2="12" y2="19" />
-                                <line x1="5" y1="12" x2="19" y2="12" />
-                            </svg>
-                            CSV
-                        </button>
-                        <div id="uploadForm" style="display: none;">
-                            <input type="file" id="csvFile" accept=".csv" />
-                            <button class="btn btn-primary" onclick="uploadCsv()">Subir CSV</button>
-                        </div>
-                    </div>
-                </div>
+                <form action="{{ route('export.products') }}" method="GET">
+                    <button class="btn btn-primary d-none d-sm-inline-block" type="submit">
+                        <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
+                            viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                        EXPORTAR CSV
+                    </button>
+                </form>
+
+
 
             </div>
         </div>
@@ -72,20 +68,20 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Product</h3>
+                            <h3 class="card-title">Productos</h3>
                         </div>
                         <div class="card-body border-bottom py-3">
                             <div class="d-flex">
                                 <div class="text-muted">
-                                    Show
+                                    Mostrar
                                     <div class="mx-2 d-inline-block">
                                         <input type="text" class="form-control form-control-sm" value="10"
                                             size="3" aria-label="Invoices count">
                                     </div>
-                                    entries
+                                    productos
                                 </div>
                                 <div class="ms-auto text-muted">
-                                    Search:
+                                    Buscar:
                                     <div class="ms-2 d-inline-block">
                                         <input type="text" class="form-control form-control-sm"
                                             aria-label="Search invoice">
@@ -140,7 +136,7 @@
                                                     <div class="dropdown">
                                                         <button class="btn dropdown-toggle align-text-top"
                                                             data-bs-toggle="dropdown">
-                                                            Actions
+                                                            Acciones
                                                         </button>
                                                         <div class="dropdown-menu dropdown-menu-end">
                                                             <a class="dropdown-item"
@@ -177,6 +173,23 @@
                         <div class="card-footer d-flex align-items-center">
                             {!! $products->links('tablar::pagination') !!}
                         </div>
+
+                        <form action="{{ route('import.products') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <div class="container mt-5">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="mb-3">
+                                            <label for="file_svc" class="form-label">Importar archivo CSV:</label>
+                                            <input type="file" class="form-control" id="file_svc" name="file_svc">
+                                        </div>
+                                        <div class="mb-3">
+                                            <button type="submit" class="btn btn-primary">Importar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
