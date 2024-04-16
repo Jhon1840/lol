@@ -18,29 +18,15 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Venta extends Model
 {
-    
     static $rules = [
-		'fecha' => 'required',
-		'total' => 'required',
+        'fecha' => 'required',
+        'total' => 'required',
     ];
 
-    protected $perPage = 20;
+    protected $fillable = ['fecha', 'total', 'cliente'];
 
-    /**
-     * Attributes that should be mass-assignable.
-     *
-     * @var array
-     */
-    protected $fillable = ['fecha','total','cliente'];
-
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
     public function ventaDetalles()
     {
         return $this->hasMany('App\Models\VentaDetalle', 'venta_id', 'id');
     }
-    
-
 }

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Venta;
 use Illuminate\Http\Request;
-
+use App\Models\Product;
 /**
  * Class VentaController
  * @package App\Http\Controllers
@@ -42,15 +42,37 @@ class VentaController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
-    {
-        request()->validate(Venta::$rules);
+{
+    // Validacion de datos
+    $request->validate([
+        'fecha' => 'required|date',
+        'total' => 'required|numeric',
+        'cliente' => 'nullable|string|max:100',
+        'producto' => 'required|integer|exists:products,id',
+        'cantidad' => 'required|integer|min:1',
+    ]);
 
-        $venta = Venta::create($request->all());
+    // Creacion de nueva venta
+    $venta = new Venta();
+    $venta->fecha = $request->input('fecha');
+    $venta->total = $request->input('total');
+    $venta->cliente = $request->input('cliente');
+    $venta->save();
 
-        return redirect()->route('ventas.index')
-            ->with('success', 'Venta created successfully.');
-    }
+    // Crear el detalle de venta para el producto seleccionado
+    $ventaDetalle = new Venta();
+    $ventaDetalle->venta_id = $venta->id;
+    $ventaDetalle->producto_id = $request->input('producto');
+    $ventaDetalle->cantidad = $request->input('cantidad');
+    // Obtiene el precio unitario
+    $producto = Product::findOrFail($request->input('producto'));
+    $ventaDetalle->precio_unitario = $producto->Precio_venta;
+    $ventaDetalle->save();
 
+    return redirect()->route('ventas.index')->with('success', 'Venta creada exitosamente.');
+}
+
+    
     /**
      * Display the specified resource.
      *
