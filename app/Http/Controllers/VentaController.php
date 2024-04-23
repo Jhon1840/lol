@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Venta;
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\DetalleVenta;
 /**
  * Class VentaController
  * @package App\Http\Controllers
@@ -30,10 +31,14 @@ class VentaController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function create()
-    {
-        $venta = new Venta();
-        return view('venta.create', compact('venta'));
-    }
+{
+    $products = Product::pluck('Nombre', 'id')->all();
+    $precios = Product::pluck('Precio_venta', 'id')->all();
+    $venta = new Venta();  
+
+    return view('venta.create', compact('products', 'precios', 'venta'));
+}
+
 
     /**
      * Store a newly created resource in storage.
@@ -43,34 +48,41 @@ class VentaController extends Controller
      */
     public function store(Request $request)
 {
-    // Validacion de datos
     $request->validate([
-        'fecha' => 'required|date',
-        'total' => 'required|numeric',
-        'cliente' => 'nullable|string|max:100',
-        'producto' => 'required|integer|exists:products,id',
-        'cantidad' => 'required|integer|min:1',
+        'productos' => 'required|array',
     ]);
 
-    // Creacion de nueva venta
+    // Creación de la venta
     $venta = new Venta();
-    $venta->fecha = $request->input('fecha');
-    $venta->total = $request->input('total');
-    $venta->cliente = $request->input('cliente');
+    $venta->fecha = now();
+    $venta->total = 0; // Se calculará a partir de los detalles
+    $venta->cliente = 'Cliente por definir'; // Modificar según necesidades
     $venta->save();
 
-    // Crear el detalle de venta para el producto seleccionado
-    $ventaDetalle = new Venta();
-    $ventaDetalle->venta_id = $venta->id;
-    $ventaDetalle->producto_id = $request->input('producto');
-    $ventaDetalle->cantidad = $request->input('cantidad');
-    // Obtiene el precio unitario
-    $producto = Product::findOrFail($request->input('producto'));
-    $ventaDetalle->precio_unitario = $producto->Precio_venta;
-    $ventaDetalle->save();
+    $totalVenta = 0;
 
-    return redirect()->route('ventas.index')->with('success', 'Venta creada exitosamente.');
+    foreach ($request->productos as $prod) {
+        $producto = Product::findOrFail($prod['id']);
+        $subtotal = $prod['cantidad'] * $producto->Precio_venta;
+        $totalVenta += $subtotal;
+
+        // Crear cada detalle de venta
+        $detalle = new DetalleVenta();
+        $detalle->venta_id = $venta->id;
+        $detalle->producto_id = $prod['id'];
+        $detalle->cantidad = $prod['cantidad'];
+        $detalle->precio_unitario = $producto->Precio_venta;
+        $detalle->subtotal = $subtotal;
+        $detalle->save();
+    }
+
+    // Actualizar el total de la venta
+    $venta->total = $totalVenta;
+    $venta->save();
+
+    return response()->json(['message' => 'Venta creada correctamente', 'id' => $venta->id]);
 }
+
 
     
     /**

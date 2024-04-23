@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\CsvController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\ImportController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\VentaController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -24,7 +26,12 @@ Auth::routes();
 
 Route::get('/home', [\App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::post('/upload-csv', 'CsvController@upload');
+//productos
 Route::resource('/product',ProductController::class);
+
+
+
+
 //Route::resource('/product', App\Http\Controllers\ProductController::class);
 Route::get('/ppp', [\App\Http\Controllers\HomeController::class, 'ppp'])->name('ppp');
 
@@ -34,6 +41,14 @@ Route::get('/export/products', [ExportController::class, 'exportProducts'])->nam
 Route::get('/producto/exportar-datos-txt', 'ProductoController@exportarDatosTxt')->name('producto.exportar-datos-txt');
 
 Route::post('/import/products', [ImportController::class, 'importProducts'])->name('import.products');
+
+
+//Usuarios
+//Route::get('/usuarios', [\App\Http\Controllers\HomeController::class, 'usuarios'])->name('usuarios');
+Route::resource('/usuarios',UserController::class);
+
+//vneta
+Route::post('/realizar-venta', [VentaController::class, 'store'])->name('realizar-venta');
 
 
 //ventas

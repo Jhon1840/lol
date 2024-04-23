@@ -10,9 +10,11 @@
                     <?php $products = App\Models\Product::all(); ?>
 
                     <x-card>
-                        <x-slot name="header">
-                            <h3 class="card-title">Productos y su PPP</h3>
-                        </x-slot>
+                        @role('admin')
+                            <x-slot name="header">
+                                <h3 class="card-title">Productos y su PPP</h3>
+                            </x-slot>
+                        @endrole
                         <x-slot name="body">
                             <div class="card-body">
                                 <table class="table">

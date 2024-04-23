@@ -161,6 +161,15 @@ return [
             
             'icon' => 'ti ti-brand-cashapp',
             'url' => '/ventas'
+            
+        ],
+        
+       
+        [
+            'text' => 'Usuarios',
+            'icon' => 'ti ti-users',
+            'url' => '/usuarios',
+            'hasAnyPermission' => ['writterr']
         ],
         
         
@@ -181,13 +190,14 @@ return [
     */
 
     'filters' => [
-        TakiElias\Tablar\Menu\Filters\GateFilter::class,
+        //TakiElias\Tablar\Menu\Filters\GateFilter::class,
         TakiElias\Tablar\Menu\Filters\HrefFilter::class,
         TakiElias\Tablar\Menu\Filters\SearchFilter::class,
         TakiElias\Tablar\Menu\Filters\ActiveFilter::class,
         TakiElias\Tablar\Menu\Filters\ClassesFilter::class,
         TakiElias\Tablar\Menu\Filters\LangFilter::class,
         TakiElias\Tablar\Menu\Filters\DataFilter::class,
+        \App\Filter\RolePermissionMenuFilter::class,
     ],
 
     /*

@@ -1,7 +1,8 @@
 import '../sass/tabler.scss';
 import './bootstrap';
 import './tabler-init';
-
+import $ from 'jquery';
+window.$ = window.jQuery = $;
 // Asignar la función uploadCsv al objeto global window
 window.uploadCsv = function() {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
