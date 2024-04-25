@@ -15,45 +15,51 @@ $precios = Product::pluck('Precio_venta', 'id')->all(); // Agrega esta línea pa
 </div>
 
 <div class="form-group mb-3">
-    <label class="form-label">{{ Form::label('total', 'Total') }}</label>
-    <div>
-        {{ Form::text('total', $venta->total, ['class' => 'form-control total', 'placeholder' => 'Total', 'readonly']) }}
-        {!! $errors->first('total', '<div class="invalid-feedback">:message</div>') !!}
-        <small class="form-hint">Total de la venta.</small>
+    <label for="metodo_pago" class="form-label">Método de pago</label>
+    <select id="metodo_pago" class="form-select" name="metodo_pago">
+        <option value="efectivo">Efectivo</option>
+        <option value="tarjeta">Tarjeta</option>
+        <option value="qr">QR</option>
+    </select>
+    <div class="invalid-feedback">
+        Por favor seleccione un método de pago.
     </div>
+    <small class="form-hint">Seleccione cómo desea realizar el pago.</small>
 </div>
 
+
 <div class="form-group mb-3">
-    <label class="form-label">{{ Form::label('cliente', 'Cliente') }}</label>
+    <label class="form-label">{{ Form::label('Nombre', 'Nombre') }}</label>
     <div>
-        {{ Form::text('cliente', $venta->cliente, ['class' => 'form-control' . ($errors->has('cliente') ? ' is-invalid' : ''), 'placeholder' => 'Cliente']) }}
+        {{ Form::text('Nombre', $venta->cliente, ['class' => 'form-control' . ($errors->has('cliente') ? ' is-invalid' : ''), 'placeholder' => 'Nombre']) }}
         {!! $errors->first('cliente', '<div class="invalid-feedback">:message</div>') !!}
-        <small class="form-hint">Nombre del cliente.</small>
+        <small class="form-hint">Nombre .</small>
     </div>
 </div>
 
 <div class="form-group mb-3">
-    <label class="form-label">{{ Form::label('producto', 'Producto') }}</label>
+    <label class="form-label">{{ Form::label('NIT', 'NIT') }}</label>
     <div>
-        <select id="producto" class="form-control{{ $errors->has('producto') ? ' is-invalid' : '' }}" name="producto">
-            <option value="" selected disabled>Seleccione un producto</option>
-            @foreach ($products as $id => $nombre)
-                <option value="{{ $id }}" data-precio="{{ $precios[$id] }}">{{ $nombre }} - Precio:
-                    {{ $precios[$id] }}</option>
-            @endforeach
-        </select>
-        {!! $errors->first('producto', '<div class="invalid-feedback">:message</div>') !!}
-        <small class="form-hint">Seleccione el producto.</small>
+        {{ Form::text('NIT', null, ['class' => 'form-control' . ($errors->has('NIT') ? ' is-invalid' : ''), 'placeholder' => 'NIT']) }}
+        {!! $errors->first('NIT', '<div class="invalid-feedback">:message</div>') !!}
+        <small class="form-hint">Ingrese el NIT del cliente.</small>
     </div>
 </div>
 
 <div class="form-group mb-3">
-    <label class="form-label">{{ Form::label('cantidad', 'Cantidad') }}</label>
+    <label class="form-label">{{ Form::label('CI', 'Cédula de Identidad') }}</label>
     <div>
-        {{ Form::number('cantidad', null, ['class' => 'form-control cantidad' . ($errors->has('cantidad') ? ' is-invalid' : ''), 'placeholder' => 'Cantidad']) }}
-        {!! $errors->first('cantidad', '<div class="invalid-feedback">:message</div>') !!}
-        <small class="form-hint">Ingrese la cantidad de productos.</small>
+        {{ Form::text('CI', null, ['class' => 'form-control' . ($errors->has('CI') ? ' is-invalid' : ''), 'placeholder' => 'CI']) }}
+        {!! $errors->first('CI', '<div class="invalid-feedback">:message</div>') !!}
+        <small class="form-hint">Ingrese la cédula de identidad del cliente.</small>
     </div>
+</div>
+
+
+<div class="form-group mb-3">
+    <label class="form-label">Total del Carrito</label>
+    <input type="text" class="form-control" id="inputTotalCarrito" name="total" readonly>
+
 </div>
 
 <div class="form-footer">
@@ -64,19 +70,3 @@ $precios = Product::pluck('Precio_venta', 'id')->all(); // Agrega esta línea pa
         </div>
     </div>
 </div>
-
-<script>
-    $(document).ready(function() {
-        $('#producto, .cantidad').change(function() {
-            var total = 0;
-
-            $('#producto option:selected').each(function(index) {
-                var cantidad = $('.cantidad').eq(index).val();
-                var precio = $(this).data('precio');
-                total += cantidad * precio;
-            });
-
-            $('.total').val(total.toFixed(2));
-        });
-    });
-</script>

@@ -48,8 +48,9 @@
                             <h3 class="card-title">Detalles de la venta</h3>
                         </div>
                         <div class="card-body">
-                            <form method="POST" action="{{ route('ventas.store') }}" id="ajaxForm" role="form"
+                            <form method="POST" action="{{ route('realizar-venta') }}" id="ajaxForm"
                                 enctype="multipart/form-data">
+
                                 @csrf
                                 @include('venta.prubea')
                             </form>

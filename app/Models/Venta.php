@@ -27,6 +27,6 @@ class Venta extends Model
 
     public function ventaDetalles()
     {
-        return $this->hasMany('App\Models\VentaDetalle', 'venta_id', 'id');
+        return $this->hasMany('App\Models\DetalleVenta', 'venta_id', 'id');
     }
 }

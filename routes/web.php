@@ -47,10 +47,21 @@ Route::post('/import/products', [ImportController::class, 'importProducts'])->na
 //Route::get('/usuarios', [\App\Http\Controllers\HomeController::class, 'usuarios'])->name('usuarios');
 Route::resource('/usuarios',UserController::class);
 
+
+
 //vneta
 Route::post('/realizar-venta', [VentaController::class, 'store'])->name('realizar-venta');
 
 
 //ventas
 Route::get('/ventas', [\App\Http\Controllers\HomeController::class, 'venta'])->name('venta');
+
 Route::resource('/ventas', App\Http\Controllers\VentaController::class);
+
+
+// Ruta para manejar la solicitud AJAX
+Route::post('/ventas/proceedPago', 'VentaController@proceedPago')->name('ventas.proceedPago');
+
+
+//factura
+Route::post('/generar-factura', 'VentaController@generarFactura')->name('generar.factura');

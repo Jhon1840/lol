@@ -1,7 +1,5 @@
 @extends('tablar::page')
-
 @section('title', 'View Venta')
-
 @section('content')
     <!-- Page header -->
     <div class="page-header d-print-none">
@@ -22,11 +20,11 @@
                         <a href="{{ route('ventas.index') }}" class="btn btn-primary d-none d-sm-inline-block">
                             <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
                             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
-                                 viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
-                                 stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                <line x1="12" y1="5" x2="12" y2="19"/>
-                                <line x1="5" y1="12" x2="19" y2="12"/>
+                                viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <line x1="12" y1="5" x2="12" y2="19" />
+                                <line x1="5" y1="12" x2="19" y2="12" />
                             </svg>
                             Venta List
                         </a>
@@ -40,7 +38,7 @@
         <div class="container-xl">
             <div class="row row-deck row-cards">
                 <div class="col-12">
-                    @if(config('tablar','display_alert'))
+                    @if (config('tablar', 'display_alert'))
                         @include('tablar::common.alert')
                     @endif
                     <div class="card">
@@ -48,20 +46,41 @@
                             <h3 class="card-title">Venta Details</h3>
                         </div>
                         <div class="card-body">
-                            
-<div class="form-group">
-<strong>Fecha:</strong>
-{{ $venta->fecha }}
-</div>
-<div class="form-group">
-<strong>Total:</strong>
-{{ $venta->total }}
-</div>
-<div class="form-group">
-<strong>Cliente:</strong>
-{{ $venta->cliente }}
-</div>
-
+                            <div class="form-group">
+                                <strong>Fecha:</strong> {{ $venta->fecha }}
+                            </div>
+                            <div class="form-group">
+                                <strong>Total:</strong> {{ $venta->total }}
+                            </div>
+                            <div class="form-group">
+                                <strong>Cliente:</strong> {{ $venta->cliente }}
+                            </div>
+                            <div class="form-group">
+                                <strong>Método de Pago:</strong> {{ $venta->metodo_pago }}
+                            </div>
+                            <div class="form-group">
+                                <strong>Detalles de la Venta:</strong>
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th>Cantidad</th>
+                                            <th>Precio Unitario</th>
+                                            <th>Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($venta->ventaDetalles as $detalle)
+                                            <tr>
+                                                <td>{{ $detalle->producto->Nombre }}</td>
+                                                <td>{{ $detalle->cantidad }}</td>
+                                                <td>{{ $detalle->precio_unitario }}</td>
+                                                <td>{{ $detalle->subtotal }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -69,5 +88,3 @@
         </div>
     </div>
 @endsection
-
-
