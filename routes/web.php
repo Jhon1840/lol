@@ -65,3 +65,11 @@ Route::post('/ventas/proceedPago', 'VentaController@proceedPago')->name('ventas.
 
 //factura
 Route::post('/generar-factura', 'VentaController@generarFactura')->name('generar.factura');
+
+
+Route::get('invoices/{filename}', 'InvoiceController@download')->name('invoices.download');
+
+Route::get('/test-file', function () {
+    \Illuminate\Support\Facades\Storage::disk('public')->put('test.txt', 'Hello, world!');
+    return 'Archivo creado con éxito';
+});

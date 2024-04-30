@@ -48,23 +48,23 @@
                         <!-- Product Cards -->
                         @foreach ($products as $id => $nombre)
                             <div class="col-sm-6 col-lg-4">
-                                <div class="card card-sm">
-                                    <a href="#" class="d-block"><img src="" class="card-img-top"></a>
+                                <div class="card card-sm clickable-card bg-dark text-white"
+                                    data-product-id="{{ $id }}" data-product-name="{{ $nombre }}"
+                                    data-product-price="{{ $precios[$id] }}" style="cursor: pointer;">
+                                    <!-- Aquí se añade la imagen -->
+                                    <a href="#" class="d-block"><img
+                                            src="https://png.pngtree.com/png-vector/20220519/ourlarge/pngtree-premium-white-icon-with-crown-on-black-background-vector-png-image_46216252.jpg"
+                                            class="card-img-top"></a>
                                     <div class="card-body">
                                         <h5 class="card-title">{{ $nombre }}</h5>
                                         <p>Precio: ${{ $precios[$id] }}</p>
-                                        <div class="d-flex">
-                                            <input type="number" id="cantidad-{{ $id }}"
-                                                class="form-control text-end" value="1" min="1">
-                                            <button data-product-id="{{ $id }}"
-                                                data-product-name="{{ $nombre }}"
-                                                data-product-price="{{ $precios[$id] }}"
-                                                class="btn btn-primary ms-2 add-to-cart">Añadir</button>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
                         @endforeach
+
+
+
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -131,37 +131,26 @@
 
 
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         let carrito = [];
 
         function addToCart(productId, productName, price) {
-            const cantidadInput = $('#cantidad-' + productId);
-            const cantidad = parseInt(cantidadInput.val());
-            if (isNaN(cantidad)) {
-                console.error('Cantidad no es un número:', cantidadInput.val());
-                return;
-            }
-
             const index = carrito.findIndex(item => item.id === productId);
             if (index > -1) {
-                carrito[index].cantidad += cantidad;
+                // Incrementa la cantidad del producto en el carrito
+                carrito[index].cantidad += 1;
             } else {
+                // Añade el producto al carrito con una cantidad inicial de 1
                 carrito.push({
                     id: productId,
                     nombre: productName,
-                    cantidad,
+                    cantidad: 1,
                     precio: price
                 });
             }
 
             actualizarCarrito();
         }
-
-        $('#modalPago').on('show.bs.modal', function(event) {
-            actualizarCarrito(); // Asegúrate de que el carrito y el formulario están actualizados
-        });
-
 
         function actualizarCarrito() {
             let subtotal = 0;
@@ -177,9 +166,9 @@
                 );
 
                 $('#productosForm').append(`
-            <input type="hidden" name="productos[${item.id}][id]" value="${item.id}">
-            <input type="hidden" name="productos[${item.id}][cantidad]" value="${item.cantidad}">
-        `);
+                    <input type="hidden" name="productos[${item.id}][id]" value="${item.id}">
+                    <input type="hidden" name="productos[${item.id}][cantidad]" value="${item.cantidad}">
+                `);
             });
 
             const iva = subtotal * 0.13;
@@ -191,12 +180,8 @@
             $('#inputTotalCarrito').val(total.toFixed(2));
         }
 
-
-
-
-
         $(document).ready(function() {
-            $('.add-to-cart').click(function(event) {
+            $('.clickable-card').click(function(event) {
                 event.preventDefault();
                 const productId = $(this).data('product-id');
                 const productName = $(this).data('product-name');
@@ -205,6 +190,4 @@
             });
         });
     </script>
-
-
 @endsection

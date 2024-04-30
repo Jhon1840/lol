@@ -62,6 +62,7 @@ class VentaController extends Controller
     public function store(Request $request)
 {
     try {
+        // Validación de los datos de entrada
         $request->validate([
             'fecha' => 'required|date',
             'metodo_pago' => 'required|string',
@@ -80,15 +81,16 @@ class VentaController extends Controller
         $venta->metodo_pago = $request->metodo_pago;
         $venta->save();
 
+        // Procesamiento de cada producto vendido
         foreach ($request->productos as $prod) {
             $producto = Product::findOrFail($prod['id']);
             $subtotal = $prod['cantidad'] * $producto->Precio_venta;
 
-            // Actualizar el stock del producto
+            // Actualización del stock del producto
             $producto->stock -= $prod['cantidad'];
             $producto->save();
 
-            // Crear cada detalle de venta
+            // Creación del detalle de venta
             $detalle = new DetalleVenta();
             $detalle->venta_id = $venta->id;
             $detalle->producto_id = $prod['id'];
@@ -98,17 +100,21 @@ class VentaController extends Controller
             $detalle->save();
         }
 
-        // Llamada al método generarFactura con los parámetros adecuados
-        $this->generarFactura($request, $venta);  // Ahora se pasa el objeto $venta como argumento
+        // Generación de la factura y obtención de la URL
+        $urlFactura = $this->generarFactura($request, $venta);
+        if (!$urlFactura) {
+            throw new \Exception("La generación de la factura falló.");
+        }
 
-        return redirect()->route('ventas.index')
-            ->with('success', 'Venta creada correctamente');
+        // Redirección a la URL de la factura
+        return redirect($urlFactura);
     } catch (\Exception $e) {
-        // Manejo de excepciones
-        return redirect()->route('ventas.index')
+        Log::error('Error en store de VentaController: ' . $e->getMessage());
+        return redirect()->route('ventas.create')
             ->with('error', 'Error al crear la venta: ' . $e->getMessage());
     }
 }
+
 
 
     
@@ -155,7 +161,7 @@ class VentaController extends Controller
 
         $venta->update($request->all());
 
-        return redirect()->route('ventas.index')
+        return redirect()->route('ventas.create')
             ->with('success', 'Venta updated successfully');
     }
 
@@ -174,14 +180,14 @@ class VentaController extends Controller
 
     
     public function generarFactura(Request $request, Venta $venta)
-    
 {
     try {
-        
-        $fecha = Carbon::parse($request->fecha);
+        Log::info('Iniciando generación de factura para la venta: ' . $venta->id);
+
+        $fecha = Carbon::parse($venta->fecha);
         $invoice = Invoice::make()
             ->buyer(new Party([
-                'name' => $request->Nombre,
+                'name' => $venta->cliente,
                 'custom_fields' => [
                     'NIT' => $request->NIT,
                     'CI' => $request->CI,
@@ -194,27 +200,28 @@ class VentaController extends Controller
         foreach ($request->productos as $prod) {
             $producto = Product::findOrFail($prod['id']);
             $item = InvoiceItem::make($producto->Nombre)
+                ->title($producto->Nombre)
                 ->pricePerUnit($producto->Precio_venta)
                 ->quantity($prod['cantidad']);
             $invoice->addItem($item);
         }
 
-        // Especifica un nombre de archivo
         $filename = 'invoice-' . $venta->id . '.pdf';
-        
-        // Guarda el archivo en el disco público
         $invoice->save('public', $filename);
+        $url = Storage::disk('public')->url($filename);
 
-        // Obtén la URL pública completa
-        // Obtén la URL pública temporal
-        $url = Storage::disk('public')->temporaryUrl($filename, now()->addMinutes(30));
+        Log::info('Factura generada y guardada: ' . $url);
 
-        return response()->json(['url' => $url]);
+        return $url; // Retorna la URL para redirección
+
     } catch (\Exception $e) {
         Log::error('Error al generar la factura: ' . $e->getMessage());
-        return response()->json(['error' => 'No se pudo generar la factura debido a un error interno. Por favor intente de nuevo.'], 500);
+        return null; // Asegúrate de manejar esto adecuadamente en tu método store
     }
 }
+
+
+    
 
 
 }
