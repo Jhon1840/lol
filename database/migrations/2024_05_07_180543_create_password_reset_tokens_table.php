@@ -3,8 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Spatie\Permission\Models\Role;
-use App\Models\User;
+
 return new class extends Migration
 {
     /**
@@ -12,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $role1 = Role::create(['name' => 'admin']);
-        $role2 = Role::create(['name' => 'cajero']);
-        $user = User::find(1);
-        $user -> assignRole($role1);
+        Schema::create('password_reset_tokens', function (Blueprint $table) {
+            $table->string('email', 255)->primary();
+            $table->string('token', 255);
+            $table->timestamp('created_at')->nullable();
+        });
     }
 
     /**
@@ -23,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('roles');
+        Schema::dropIfExists('password_reset_tokens');
     }
 };
