@@ -98,22 +98,24 @@ class VentaController extends Controller
             $detalle->save();
         }
 
-        // Generar factura y obtener la URL
         $urlFactura = $this->generarFactura($request, $venta);
 
-        // Redireccionar a la URL de la factura
-        return redirect($urlFactura);
+
+        if ($urlFactura) {
+            // Si la URL de la factura se genera correctamente, redirecciona con mensaje de éxito y URL
+            return redirect()->route('ventas.create')
+                ->with('success', 'Venta creada y factura generada correctamente. Descargue su factura aquí: <a href="' . $urlFactura . '">Descargar Factura</a>');
+        } else {
+            // En caso de no poder generar la URL de la factura
+            return redirect()->route('ventas.create')
+                ->with('error', 'Venta creada pero no se pudo generar la factura.');
+        }
 
     } catch (\Exception $e) {
         return redirect()->route('ventas.create')
             ->with('error', 'Error al crear la venta: ' . $e->getMessage());
     }
 }
-
-
-    
-
-
 
     
     /**
@@ -174,48 +176,55 @@ class VentaController extends Controller
 
     
     public function generarFactura(Request $request, Venta $venta)
-{
-    try {
-        $fecha = Carbon::parse($venta->fecha);
-        $invoice = Invoice::make()
-            ->buyer(new Party([
+    {
+        try {
+            
+            // Crear el objeto del comprador con datos del cliente
+            $buyer = new Party([
                 'name' => $venta->cliente,
                 'custom_fields' => [
                     'NIT' => $request->NIT,
                     'CI' => $request->CI,
                 ],
-            ]))
-            ->date($fecha)
-            ->currencyCode('USD')
-            ->currencySymbol('$');
-
-        foreach ($request->productos as $prod) {
-            $producto = Product::findOrFail($prod['id']);
-            $item = InvoiceItem::make($producto->Nombre)
-                ->title($producto->Nombre)
-                ->pricePerUnit($producto->Precio_venta)
-                ->quantity($prod['cantidad']);
-            $invoice->addItem($item);
-        }
-
-        $filename = 'invoice-' . $venta->id . '.pdf';
-        $invoice->save('public', $filename);
-
-        // Obtener la URL pública completa
-        $url = Storage::disk('public')->url($filename);
-        //dd($invoice->stream()); 
-
-        return $url; // Retorna la URL para redirección
-
-    } catch (\Exception $e) {
-        Log::error('Error al generar la factura: ' . $e->getMessage());
-        throw new \Exception("No se pudo generar la factura.");
-    }
-   
-
-}
-
+            ]);
     
+            $user = auth()->user();
+    
+            $seller = new Party([
+                'name' => $user->name,
+                'Nro vendedor ' . $user->id,
+            ]);
+    
+            $fecha = Carbon::parse($venta->fecha);
+    
+            $invoice = Invoice::make()
+                ->buyer($buyer)
+                ->seller($seller)
+                ->date($fecha)
+                ->currencySymbol('BS')
+                ->currencyCode('Bolivianos')
+                ->taxRate(13);
+    
+            foreach ($request->productos as $prod) {
+                $producto = Product::findOrFail($prod['id']);
+                $item = InvoiceItem::make($producto->Nombre)
+                    ->title($producto->Nombre)
+                    ->pricePerUnit($producto->Precio_venta)
+                    ->quantity($prod['cantidad']);
 
+                $invoice->addItem($item);
+            }
 
+            $invoice->filename($user->name . '' . $venta->cliente.''.$request->CI);
+            $invoice->save('public'); // Guardar la factura en el sistema de archivos
+    
+            $link = $invoice->url();
+            //$invoice ->stream();
+            return $link;
+    
+        } catch (\Exception $e) {
+            Log::error('Error al generar la factura: ' . $e->getMessage());
+            throw new \Exception("No se pudo generar la factura.". $e->getMessage());
+        }
+    }
 }

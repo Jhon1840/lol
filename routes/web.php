@@ -16,9 +16,6 @@ Auth::routes();
 
 Route::get('/home', [\App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-Auth::routes();
-
-Route::get('/home', [\App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 Auth::routes();
 
@@ -47,8 +44,6 @@ Route::post('/import/products', [ImportController::class, 'importProducts'])->na
 //Route::get('/usuarios', [\App\Http\Controllers\HomeController::class, 'usuarios'])->name('usuarios');
 Route::resource('/usuarios',UserController::class);
 
-
-
 //vneta
 Route::post('/realizar-venta', [VentaController::class, 'store'])->name('realizar-venta');
 
@@ -58,6 +53,8 @@ Route::get('/ventas', [\App\Http\Controllers\HomeController::class, 'venta'])->n
 
 Route::resource('/ventas', App\Http\Controllers\VentaController::class);
 
+//Metricas
+Route::get('/metricas', [\App\Http\Controllers\Metricas::class, 'index'])->name('metricas');
 
 // Ruta para manejar la solicitud AJAX
 Route::post('/ventas/proceedPago', 'VentaController@proceedPago')->name('ventas.proceedPago');

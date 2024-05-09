@@ -147,13 +147,16 @@ return [
         [
             'text' => 'Productos',
             'icon' => 'ti ti-shopping-cart',
-            'url' => '/product'
+            'url' => '/product',
+            'hasAnyPermission' => ['writterr']
         ],
 
         [
             'text' => 'PPP',
             'icon' => 'ti ti-shopping-cart',
-            'url' => '/ppp'
+            'url' => '/ppp',
+            'hasAnyPermission' => ['writterr']
+            
         ],
 
         [
@@ -164,7 +167,14 @@ return [
             
         ],
         
-       
+        [
+            'text' => 'Metricas',
+            'icon' => 'ti ti-adjustments-dollar',
+            'url' => '/metricas',
+            'hasAnyPermission' => ['writterr']
+            
+        ],
+
         [
             'text' => 'Usuarios',
             'icon' => 'ti ti-users',

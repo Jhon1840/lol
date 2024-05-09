@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\vENTA;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -23,18 +23,26 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('home');
+        
+        $ventas = Venta::paginate(10);
+
+        return view('venta.index', compact('ventas'))
+            ->with('i', (request()->input('page', 1) - 1) * $ventas->perPage());
+        
     }
 
     public function venta()
     {
-        return view('ventas\venta');
+        return view('venta\venta');
     }
     public function ppp()
     {
         return view('home');
     }
-
+    public function metricas()
+    {
+        return view('metricas\metricas');
+    }
     public function usuarios()
     {
         return view('usuarios\usuarios');

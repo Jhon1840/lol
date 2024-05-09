@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models;
-
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -41,6 +41,6 @@ class Product extends Model
      */
     protected $fillable = ['Nombre','Descripcion','Proveedor','stock','Precio_venta','Precio_compra'];
 
-
+    
 
 }
