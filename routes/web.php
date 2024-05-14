@@ -47,6 +47,9 @@ Route::resource('/usuarios',UserController::class);
 //vneta
 Route::post('/realizar-venta', [VentaController::class, 'store'])->name('realizar-venta');
 
+// Cancelar venta
+Route::post('/cancelar-venta', [VentaController::class, 'cancelar'])->name('cancelar-venta');
+
 
 //ventas
 Route::get('/ventas', [\App\Http\Controllers\HomeController::class, 'venta'])->name('venta');
@@ -70,3 +73,12 @@ Route::get('/test-file', function () {
     \Illuminate\Support\Facades\Storage::disk('public')->put('test.txt', 'Hello, world!');
     return 'Archivo creado con éxito';
 });
+
+
+
+//caja
+Route::post('/ventas/toggleCaja', [VentaController::class, 'toggleCaja'])->name('ventas.toggleCaja');
+
+//cerrar caja
+Route::post('/ventas/cerrarCaja', [VentaController::class, 'cerrarCaja']);
+

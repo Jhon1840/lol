@@ -12,7 +12,9 @@ use LaravelDaily\Invoices\Classes\InvoiceItem;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log; 
 use Illuminate\Support\Facades\Storage;
-
+use App\Models\Caja;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 /**
  * Class VentaController
  * @package App\Http\Controllers
@@ -27,10 +29,14 @@ class VentaController extends Controller
     public function index()
     {
         $ventas = Venta::paginate(10);
-
-        return view('venta.index', compact('ventas'))
+        $cajaActual = Caja::latest()->first(); 
+    
+        $cajaAbierta = $cajaActual ? $cajaActual->estado == 'caja abierta' : false;
+    
+        return view('venta.index', compact('ventas', 'cajaActual', 'cajaAbierta'))
             ->with('i', (request()->input('page', 1) - 1) * $ventas->perPage());
     }
+    
 
     /**
      * Show the form for creating a new resource.
@@ -39,12 +45,20 @@ class VentaController extends Controller
      */
     public function create()
     {
-    $products = Product::pluck('Nombre', 'id')->all();
-    $precios = Product::pluck('Precio_venta', 'id')->all();
-    $venta = new Venta();  
-
-    return view('venta.create', compact('products', 'precios', 'venta'));
+        $products = Product::pluck('Nombre', 'id');
+        $precios = Product::pluck('Precio_venta', 'id');
+        $venta = new Venta();
+        $cajaActual = Caja::where('estado', 1)->first(); // Asumiendo que el modelo Caja tiene un campo 'estado'
+    
+        // Determinar si la caja está abierta o no
+        $cajaAbierta = !is_null($cajaActual); // true si cajaActual no es null, false de lo contrario
+    
+        // Pasar tanto cajaActual como cajaAbierta a la vista junto con los otros datos
+        return view('venta.create', compact('products', 'precios', 'venta', 'cajaActual', 'cajaAbierta'));
     }
+    
+
+
 
     public function proceedPago(Request $request)
     {
@@ -60,64 +74,120 @@ class VentaController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
+    {
+        //dd($request->all());
+        try {
+            // Validación de los datos recibidos en el formulario
+            $request->validate([
+                'fecha' => 'required|date',
+                'metodo_pago' => 'required|string',
+                'Nombre' => 'required|string',
+                'NIT' => 'required|string',
+                'CI' => 'nullable|string',
+                'total' => 'required|numeric',
+                'productos' => 'required|array',
+                'cambio' => 'nullable|numeric|required_if:metodo_pago,efectivo',
+                'billetes.*' => 'nullable|integer|min:0',
+                'monedas.*' => 'nullable|integer|min:0',
+                //'caja_id' => 'required|integer|exists:cajas,id' 
+            ]);
+    
+            // Creación de la venta
+            $venta = new Venta();
+            $venta->fecha = $request->fecha;
+            $venta->total = $request->total;
+            $venta->cliente = $request->Nombre;
+            $venta->metodo_pago = $request->metodo_pago;
+            $venta->vendedor = $request->user() ? $request->user()->name : null;
+            $venta->caja_id = $request->caja_id;
+            $venta->save();
+    
+            // Actualizar la caja
+            $caja = Caja::findOrFail($venta->caja_id);
+            $caja->dinero += $venta->total; 
+            $caja->save();
+    
+            foreach ($request->productos as $prod) {
+                $producto = Product::findOrFail($prod['id']);
+                $subtotal = $prod['cantidad'] * $producto->Precio_venta;
+    
+                // Actualizar el stock del producto
+                $producto->stock -= $prod['cantidad'];
+                $producto->save();
+    
+                // Crear cada detalle de venta
+                $detalle = new DetalleVenta();
+                $detalle->venta_id = $venta->id;
+                $detalle->producto_id = $prod['id'];
+                $detalle->cantidad = $prod['cantidad'];
+                $detalle->precio_unitario = $producto->Precio_venta;
+                $detalle->subtotal = $subtotal;
+                $detalle->save();
+    
+                // Guardar billetes y monedas si el método de pago es efectivo
+                if ($request->metodo_pago === 'efectivo') {
+                    if (!empty($request->billetes)) {
+                        $this->guardarPagos($detalle->id, $request->billetes, 'billete');
+                    }
+                    if (!empty($request->monedas)) {
+                        $this->guardarPagos($detalle->id, $request->monedas, 'moneda');
+                    }
+                }
+            }
+    
+            if (!is_null($request->cambio)) {
+                $venta->cambio = $request->cambio;
+                $venta->save();
+            }
+    
+            return redirect()->route('ventas.create')->with('success', 'Venta creada correctamente.');
+        } catch (\Exception $e) {
+            return redirect()->route('ventas.create')->with('error', 'Error al crear la venta: ' . $e->getMessage());
+        }
+    }
+    
+    private function guardarPagos($detalleId, $pagos, $tipo)
+    {
+        foreach ($pagos as $denominacion => $cantidad) {
+            if ($cantidad > 0) {
+                DB::table('pagos_venta')->insert([
+                    'venta_detalle_id' => $detalleId,
+                    'tipo_pago' => $tipo,
+                    'valor' => $denominacion,
+                    'cantidad' => $cantidad,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+        }
+    }
+    
+
+
+public function cancelar(Request $request)
 {
     try {
-        $request->validate([
-            'fecha' => 'required|date',
-            'metodo_pago' => 'required|string',
-            'Nombre' => 'required|string',
-            'NIT' => 'required|string',
-            'CI' => 'nullable|string',
-            'total' => 'required|numeric',
-            'productos' => 'required|array',
-        ]);
-
-        // Creación de la venta
+        // Crear la nueva venta con los datos proporcionados
         $venta = new Venta();
-        $venta->fecha = $request->fecha;
-        $venta->total = $request->total;
-        $venta->cliente = $request->Nombre;
-        $venta->metodo_pago = $request->metodo_pago;
+        $venta->fecha = now();  // Usamos la fecha actual del servidor
+        $venta->total = 0;  // Puedes ajustar este valor según lo que necesites
+        $venta->estado = $request->input('estado', 'Cancelado');  // Estado por defecto es 'Cancelado'
+        $venta->cliente = null;  // No se recibe cliente desde el formulario, asigna null
+        $venta->metodo_pago = null;  // No se recibe método de pago desde el formulario, asigna null
+        $venta->vendedor = $request->user() ? $request->user()->name : null;  // Guarda el nombre del vendedor si el usuario está autenticado
         $venta->save();
 
-        foreach ($request->productos as $prod) {
-            $producto = Product::findOrFail($prod['id']);
-            $subtotal = $prod['cantidad'] * $producto->Precio_venta;
-
-            // Actualizar el stock del producto
-            $producto->stock -= $prod['cantidad'];
-            $producto->save();
-
-            // Crear cada detalle de venta
-            $detalle = new DetalleVenta();
-            $detalle->venta_id = $venta->id;
-            $detalle->producto_id = $prod['id'];
-            $detalle->cantidad = $prod['cantidad'];
-            $detalle->precio_unitario = $producto->Precio_venta;
-            $detalle->subtotal = $subtotal;
-            $detalle->save();
-        }
-
-        $urlFactura = $this->generarFactura($request, $venta);
-
-
-        if ($urlFactura) {
-            // Si la URL de la factura se genera correctamente, redirecciona con mensaje de éxito y URL
-            return redirect()->route('ventas.create')
-                ->with('success', 'Venta creada y factura generada correctamente. Descargue su factura aquí: <a href="' . $urlFactura . '">Descargar Factura</a>');
-        } else {
-            // En caso de no poder generar la URL de la factura
-            return redirect()->route('ventas.create')
-                ->with('error', 'Venta creada pero no se pudo generar la factura.');
-        }
+        // Redirigir a la creación de venta con mensaje de confirmación
+        return redirect()->route('ventas.create')->with('info', 'Venta cancelada correctamente y guardada en el registro.');
 
     } catch (\Exception $e) {
-        return redirect()->route('ventas.create')
-            ->with('error', 'Error al crear la venta: ' . $e->getMessage());
+        // En caso de error, redirigir a la creación de venta con mensaje de error
+        return redirect()->route('ventas.create')->with('error', 'Error al cancelar la venta: ' . $e->getMessage());
     }
 }
 
-    
+
+
     /**
      * Display the specified resource.
      *
@@ -216,7 +286,7 @@ class VentaController extends Controller
             }
 
             $invoice->filename($user->name . '' . $venta->cliente.''.$request->CI);
-            $invoice->save('public'); // Guardar la factura en el sistema de archivos
+            $invoice->save('public'); 
     
             $link = $invoice->url();
             //$invoice ->stream();
@@ -227,4 +297,74 @@ class VentaController extends Controller
             throw new \Exception("No se pudo generar la factura.". $e->getMessage());
         }
     }
+
+    public function toggleCaja(Request $request)
+{
+    try {
+        // Asegurarse de que un usuario está autenticado antes de proceder
+        if (!auth()->check()) {
+            return response()->json(['status' => 'error', 'message' => 'Usuario no autenticado.'], 401);
+        }
+
+        // Obtener los datos del usuario autenticado
+        $usuario = auth()->user();
+        $nombreVendedor = $usuario->name;
+        $idVendedor = $usuario->id;
+
+        $cajaExistente = Caja::where('id_vendedor', $idVendedor)
+                            ->where('estado', 'caja abierta')
+                            ->first();
+        if ($cajaExistente) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ya existe una caja abierta para este vendedor.',
+                'cajaId' => $cajaExistente->id 
+            ]);
+        }
+
+        $dineroInicial = 0;
+
+        $nuevaCaja = new Caja;
+        $nuevaCaja->estado = 'caja abierta';
+        $nuevaCaja->nombre_vendedor = $nombreVendedor;
+        $nuevaCaja->id_vendedor = $idVendedor;
+        $nuevaCaja->dinero = $dineroInicial;
+        $nuevaCaja->fecha = now(); // Establece la fecha actual del servidor
+        $nuevaCaja->save();
+        $cajaId = $nuevaCaja->id;
+        return response()->json([
+            'success' => true,
+            'message' => 'Caja abierta correctamente y registrada al vendedor autenticado.',
+            'cajaId' => $cajaId // Devuelve el ID de la nueva caja abierta
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Error al cambiar el estado de la caja: ' . $e->getMessage());
+        return response()->json(['status' => 'error', 'message' => 'Error trágico al cambiar el estado de la caja.'], 500);
+    }
+}
+
+
+public function cerrarCaja(Request $request)
+{
+    try {
+        $cajaId = $request->input('caja_id');
+        if (!$cajaId) {
+            return response()->json(['success' => false, 'message' => 'ID de caja no proporcionado.']);
+        }
+
+        $caja = Caja::findOrFail($cajaId);
+
+        if ($caja->estado != 'caja abierta') {
+            return response()->json(['success' => false, 'message' => 'La caja no está abierta.']);
+        }
+
+        $caja->estado = 'caja cerrada';
+        $caja->save();
+
+        return response()->json(['success' => true, 'message' => 'Caja cerrada correctamente.']);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => 'Error al cerrar la caja: ' . $e->getMessage()]);
+    }
+}
+
 }
