@@ -84,26 +84,23 @@
                                                 <polyline points="6 15 12 9 18 15" />
                                             </svg>
                                         </th>
-
                                         <th>Fecha</th>
                                         <th>Total</th>
                                         <th>Cliente</th>
-
+                                        <th>Estado</th>
                                         <th class="w-1"></th>
                                     </tr>
                                 </thead>
-
                                 <tbody>
                                     @forelse ($ventas as $venta)
                                         <tr>
                                             <td><input class="form-check-input m-0 align-middle" type="checkbox"
                                                     aria-label="Select venta"></td>
                                             <td>{{ ++$i }}</td>
-
                                             <td>{{ $venta->fecha }}</td>
                                             <td>{{ $venta->total }}</td>
                                             <td>{{ $venta->cliente }}</td>
-
+                                            <td>{{ $venta->estado ?? 'Aceptado' }}</td>
                                             <td>
                                                 <div class="btn-list flex-nowrap">
                                                     <div class="dropdown">
@@ -116,7 +113,6 @@
                                                                 href="{{ route('ventas.show', $venta->id) }}">
                                                                 View
                                                             </a>
-
                                                             <form action="{{ route('ventas.destroy', $venta->id) }}"
                                                                 method="POST">
                                                                 @csrf
@@ -128,6 +124,13 @@
                                                                     Delete
                                                                 </button>
                                                             </form>
+                                                            <form
+                                                                action="{{ route('cancelar-venta-producto', $venta->id) }}"
+                                                                method="POST" style="display: inline;">
+                                                                @csrf
+                                                                <button type="submit"
+                                                                    class="dropdown-item text-red">Cancelar venta</button>
+                                                            </form>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -137,7 +140,6 @@
                                         <td>No Data Found</td>
                                     @endforelse
                                 </tbody>
-
                             </table>
                         </div>
                         <div class="card-footer d-flex align-items-center">

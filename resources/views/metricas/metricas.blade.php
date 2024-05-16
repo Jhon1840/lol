@@ -102,6 +102,8 @@
                             </div>
                         </div>
                     </div>
+
+                    @include('metricas.components.tasks')
                 </div>
 
             </div>

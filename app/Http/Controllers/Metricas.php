@@ -5,6 +5,7 @@ use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\Venta;
+use App\Models\Caja;
 class Metricas extends Controller
 {
     public function index()
@@ -28,8 +29,12 @@ class Metricas extends Controller
         ->orderBy('total_generado', 'desc')
         ->get();
 
-    return view('metricas.metricas', compact('products', 'productosMasVendidos', 'maxVendidos', 'totalVentas', 'totalRecaudado', 'productosMasRentables'))
+    $tasks = Caja::all();
+
+    return view('metricas.metricas', compact('products', 'productosMasVendidos', 'maxVendidos', 'totalVentas', 'totalRecaudado', 'productosMasRentables','tasks'))
         ->with('i', (request()->input('page', 1) - 1) * $products->perPage());
+
+    
 }
 
     

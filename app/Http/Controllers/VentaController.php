@@ -164,6 +164,36 @@ class VentaController extends Controller
     
 
 
+    public function cancelarVenta($id)
+    {
+        try {
+            // Encontrar la venta por su ID
+            $venta = Venta::findOrFail($id);
+    
+            // Verificar si la venta ya está cancelada
+            if ($venta->estado === 'cancelado') {
+                return redirect()->route('ventas.index')->with('error', 'La venta ya está cancelada.');
+            }
+    
+            // Revertir los detalles de la venta
+            $detalles = $venta->ventaDetalles;
+            foreach ($detalles as $detalle) {
+                // Devolver los productos al stock original
+                $producto = Product::findOrFail($detalle->producto_id);
+                $producto->stock += $detalle->cantidad;
+                $producto->save();
+            }
+    
+    
+            $venta->estado = 'cancelado';
+            $venta->save();
+    
+            return redirect()->route('ventas.index')->with('success', 'Venta cancelada correctamente.');
+        } catch (\Exception $e) {
+            return redirect()->route('ventas.index')->with('error', 'Error al cancelar la venta: ' . $e->getMessage());
+        }
+    }
+    
 public function cancelar(Request $request)
 {
     try {
@@ -366,5 +396,16 @@ public function cerrarCaja(Request $request)
         return response()->json(['success' => false, 'message' => 'Error al cerrar la caja: ' . $e->getMessage()]);
     }
 }
+
+public function getDineroEnCaja($id)
+{
+    $caja = Caja::find($id);
+    if ($caja) {
+        return response()->json(['success' => true, 'dinero' => $caja->dinero]);
+    } else {
+        return response()->json(['success' => false, 'message' => 'Caja no encontrada']);
+    }
+}
+
 
 }

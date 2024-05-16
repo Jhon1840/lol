@@ -23,7 +23,9 @@ class Venta extends Model
         'total' => 'required',
     ];
 
-    protected $fillable = ['fecha', 'total', 'cliente'];
+    protected $fillable = [
+        'fecha', 'total', 'cliente', 'metodo_pago', 'estado', 'vendedor', 'cambio', 'caja_id'
+    ];
 
     public function ventaDetalles()
     {

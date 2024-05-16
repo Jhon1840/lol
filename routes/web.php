@@ -50,6 +50,8 @@ Route::post('/realizar-venta', [VentaController::class, 'store'])->name('realiza
 // Cancelar venta
 Route::post('/cancelar-venta', [VentaController::class, 'cancelar'])->name('cancelar-venta');
 
+//cancelarventa(devolver producto)
+Route::post('/cancelarventaproducto/{id}', [VentaController::class, 'cancelarVenta'])->name('cancelar-venta-producto');
 
 //ventas
 Route::get('/ventas', [\App\Http\Controllers\HomeController::class, 'venta'])->name('venta');
@@ -81,4 +83,7 @@ Route::post('/ventas/toggleCaja', [VentaController::class, 'toggleCaja'])->name(
 
 //cerrar caja
 Route::post('/ventas/cerrarCaja', [VentaController::class, 'cerrarCaja']);
+
+Route::post('/ventas/caja/{id}', [VentaController::class, 'getDineroEnCaja']);
+
 
