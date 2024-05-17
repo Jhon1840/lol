@@ -9,9 +9,12 @@
         ->latest()
         ->first();
 
-    $dineroCajaAbierta = $cajaAbierta ? $cajaAbierta->dinero : 0;
-    
+    //$datos_caja = Caja::where('nombre_vendedor', $usuarioLogueado->name)
+    //dd($cajaAbierta, $usuarioLogueado->name);
+
 @endphp
+
+
 
 @extends('tablar::page')
 
@@ -33,23 +36,15 @@
                 </div>
                 <!-- Page title actions -->
                 <div class="col-12 col-md-auto ms-auto d-print-none">
-                    <div class="btn-list">
-                        @if (isset($cajaAbierta) && $cajaAbierta)
-                            <button id="botonCaja" class="btn btn-warning d-none d-sm-inline-block"
-                                onclick="toggleCaja()">Cerrar caja</button>
-                        @else
-                            <button id="botonCaja" class="btn btn-primary" onclick="">Abrir Caja</button>
-                        @endif
-                    </div>
+                <button id="toggleCajaBtn" class="btn {{ $cajaAbierta ? 'btn-warning' : 'btn-primary' }}"
+        data-action="{{ $cajaAbierta ? 'cerrar' : 'abrir' }}"
+        onclick="toggleCaja()"> 
+    {{ $cajaAbierta ? 'Cerrar Caja' : 'Abrir Caja' }}
+</button>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Incluir los modales -->
-    @include('venta.modals.modal_confirmar_abrir_caja')
-    @include('venta.modals.modal_confirmar_cerrar_caja')
-    @include('venta.modals.modal_abrir_caja_primero')
 
     <!-- Modal de Confirmación para Cerrar Caja -->
     <div class="modal fade" id="modalConfirmacionCerrarCaja" tabindex="-1"
@@ -157,8 +152,7 @@
                         <input type="hidden" name="order_id" value="{{ uniqid() }}">
                         @include('venta.form')
                         <div id="productosForm"></div>
-                        <input type="hidden" name="caja_id" value="{{ isset($cajaAbierta) ? $cajaAbierta->id : '' }}"
-                            id="inputCajaId">
+                        <input type="hidden" name="caja_id" value="" id="inputCajaId">
                     </form>
                 </div>
             </div>
@@ -191,185 +185,168 @@
     </div>
 
     <script>
-        $(document).ready(function() {
-            let carrito = [];
-            let isCajaToggling = false; // Variable para evitar múltiples llamadas
+        let carrito = [];
 
-            function addToCart(productId, productName, price) {
-                const cajaId = $('#inputCajaId').val();
-                if (!cajaId) {
-                    $('#modalAbrirCajaPrimero').modal('show');
-                    return;
-                }
-
-                const index = carrito.findIndex(item => item.id === productId);
-                if (index > -1) {
-                    // Incrementa la cantidad del producto en el carrito
-                    carrito[index].cantidad += 1;
-                } else {
-                    // Añade el producto al carrito con una cantidad inicial de 1
-                    carrito.push({
-                        id: productId,
-                        nombre: productName,
-                        cantidad: 1,
-                        precio: price
-                    });
-                }
-                actualizarCarrito();
-            }
-
-            function actualizarCarrito() {
-                let subtotal = 0;
-                $('#carrito').empty();
-                $('#productosForm').empty();
-
-                carrito.forEach(item => {
-                    const subtotalItem = item.cantidad * item.precio;
-                    subtotal += subtotalItem;
-
-                    $('#carrito').append(
-                        `<li>${item.nombre} - Cantidad: ${item.cantidad} - Subtotal: $${subtotalItem.toFixed(2)}</li>`
-                    );
-
-                    $('#productosForm').append(`
-                        <input type="hidden" name="productos[${item.id}][id]" value="${item.id}">
-                        <input type="hidden" name="productos[${item.id}][cantidad]" value="${item.cantidad}">
-                        <input type="hidden" name="productos[${item.id}][precio]" value="${item.precio}">
-                        <input type="hidden" name="productos[${item.id}][subtotal]" value="${subtotalItem}">
-                    `);
+        function addToCart(productId, productName, price) {
+            const index = carrito.findIndex(item => item.id === productId);
+            if (index > -1) {
+                // Incrementa la cantidad del producto en el carrito
+                carrito[index].cantidad += 1;
+            } else {
+                // Añade el producto al carrito con una cantidad inicial de 1
+                carrito.push({
+                    id: productId,
+                    nombre: productName,
+                    cantidad: 1,
+                    precio: price
                 });
-
-                const iva = subtotal * 0.13;
-                const total = subtotal + iva;
-
-                // Redondeo del total usando Math.ceil
-                const totalRedondeado = Math.ceil(total);
-
-                $('#subtotal').text(`$${subtotal.toFixed(2)}`);
-                $('#iva').text(`$${iva.toFixed(2)}`);
-                $('#total').text(`$${totalRedondeado}`);
-                $('#inputTotalCarrito').val(totalRedondeado);
             }
-           // let isCajaToggling = false; // Variable para evitar múltiples llamadas
+            actualizarCarrito();
+        }
 
-            function toggleCaja() {
-                if (isCajaToggling) return; // Evitar múltiples llamadas
-                isCajaToggling = true;
+        function actualizarCarrito() {
+            let subtotal = 0;
+            $('#carrito').empty();
+            $('#productosForm').empty();
 
-                const botonCaja = $('#botonCaja');
-                const cajaId = $('#inputCajaId').val();
+            carrito.forEach(item => {
+                const subtotalItem = item.cantidad * item.precio;
+                subtotal += subtotalItem;
 
-                // Deshabilitar el botón para evitar múltiples clics
-                botonCaja.prop('disabled', true);
+                $('#carrito').append(
+                    `<li>${item.nombre} - Cantidad: ${item.cantidad} - Subtotal: $${subtotalItem.toFixed(2)}</li>`
+                );
 
-                if (botonCaja.hasClass('btn-warning')) { // Cerrar Caja
-                    // Mostrar el modal de confirmar cierre de caja
-                    $('#modalConfirmarCerrarCaja').modal('show');
-                    isCajaToggling = false;
-                } else { // Abrir Caja
-                    $('#modalConfirmarAbrirCaja').modal('show');
-                    isCajaToggling = false;
-                }
-            }
-
-            function abrirCaja() {
-                return fetch('/ventas/toggleCaja', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                        },
-                        body: JSON.stringify({
-                            abrir: true
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            return data.cajaId;
-                        } else {
-                            if (data.cajaId) {
-                                $('#inputCajaId').val(data.cajaId);
-                                $('#botonCaja').text('Cerrar Caja').removeClass('btn-primary').addClass(
-                                    'btn-warning');
-                                console.warn('Usando caja existente con ID:', data.cajaId);
-                                return data.cajaId;
-                            }
-                            console.error('Error al abrir la caja:', data.message);
-                            throw new Error('Error al abrir la caja: ' + data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error al manejar la respuesta de la caja:', error);
-                        throw error;
-                    });
-            }
-
-            function cerrarCaja(cajaId) {
-                if (!cajaId) {
-                    console.error('No hay un ID de caja para cerrar.');
-                    return Promise.reject(new Error('No hay un ID de caja para cerrar.'));
-                }
-
-                return fetch('/ventas/cerrarCaja', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                        },
-                        body: JSON.stringify({
-                            caja_id: cajaId,
-                            observaciones: $('#observaciones').val()
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            $('#inputCajaId').val('');
-                            $('#botonCaja').text('Abrir Caja').removeClass('btn-warning').addClass(
-                                'btn-primary');
-                            console.log('Caja cerrada correctamente');
-                            location.reload(); // Recargar la página después de cerrar la caja
-                        } else {
-                            console.error('Error al cerrar la caja:', data.message);
-                            throw new Error('Error al cerrar la caja: ' + data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error al cerrar la caja:', error);
-                        throw error;
-                    });
-            }
-
-            // Asignar la función toggleCaja solo al botón de abrir/cerrar caja
-            $('#botonCaja').on('click', toggleCaja);
-
-            // Confirmar Abrir Caja
-            $('#confirmarAbrirCaja').on('click', function() {
-                abrirCaja().then(nuevaCajaId => {
-                    if (nuevaCajaId) {
-                        $('#botonCaja').text('Cerrar Caja').removeClass('btn-primary').addClass(
-                            'btn-warning');
-                        $('#inputCajaId').val(nuevaCajaId);
-                        console.log('Caja abierta con ID:', nuevaCajaId);
-                    }
-                    $('#modalConfirmarAbrirCaja').modal('hide');
-                }).catch(error => {
-                    console.error('Error al abrir la caja:', error);
-                });
+                $('#productosForm').append(`
+                    <input type="hidden" name="productos[${item.id}][id]" value="${item.id}">
+                    <input type="hidden" name="productos[${item.id}][cantidad]" value="${item.cantidad}">
+                    <input type="hidden" name="productos[${item.id}][precio]" value="${item.precio}">
+                    <input type="hidden" name="productos[${item.id}][subtotal]" value="${subtotalItem}">
+                `);
             });
 
-            // Confirmar Cerrar Caja
-            $('#confirmarCerrarCaja').on('click', function() {
-                const cajaId = $('#inputCajaId').val();
+            const iva = subtotal * 0.13;
+            const total = subtotal + iva;
+
+            // Redondeo del total usando Math.ceil
+            const totalRedondeado = Math.ceil(total);
+
+            $('#subtotal').text(`$${subtotal.toFixed(2)}`);
+            $('#iva').text(`$${iva.toFixed(2)}`);
+            $('#total').text(`$${totalRedondeado}`);
+            $('#inputTotalCarrito').val(totalRedondeado);
+        }
+
+        function abrirCaja() {
+            return fetch('/ventas/toggleCaja', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    body: JSON.stringify({
+                        abrir: true
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        $('#inputCajaId').val(data.cajaId);
+                        $('#botonCaja').text('Cerrar Caja').removeClass('btn-primary').addClass('btn-warning');
+                        console.log('Caja abierta con ID:', data.cajaId);
+                    } else {
+                        // Si no se pudo abrir una nueva caja pero se recibió un ID de caja ya abierta
+                        if (data.cajaId) {
+                            $('#inputCajaId').val(data.cajaId);
+                            $('#botonCaja').text('Cerrar Caja').removeClass('btn-primary').addClass('btn-warning');
+                            console.warn('Usando caja existente con ID:', data.cajaId);
+                        }
+                        console.error('Error al abrir la caja:', data.message);
+                        throw new Error('Error al abrir la caja: ' + data.message);
+                    }
+                    return data.cajaId;
+                })
+                .catch(error => {
+                    console.error('Error al manejar la respuesta de la caja:', error);
+                    throw error;
+                });
+        }
+
+        function cerrarCaja(cajaId) {
+            if (!cajaId) {
+                console.error('No hay un ID de caja para cerrar.');
+                return;
+            }
+
+            return fetch('/ventas/cerrarCaja', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    body: JSON.stringify({
+                        caja_id: cajaId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        $('#inputCajaId').val('');
+                        $('#botonCaja').text('Abrir Caja').removeClass('btn-warning').addClass('btn-primary');
+                        console.log('Caja cerrada correctamente');
+                    } else {
+                        console.error('Error al cerrar la caja:', data.message);
+                        throw new Error('Error al cerrar la caja: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cerrar la caja:', error);
+                    throw error;
+                });
+        }
+
+        function toggleCaja() {
+
+            const botonCaja = $('#toggleCajaBtn');  // Asegúrate de que el ID corresponde al de tu botón.
+    const action = botonCaja.data('action');  // Usar .data() para acceder a los datos del atributo.
+    const cajaId = $cajaAbierta
+
+    botonCaja.prop('disabled', true);
+
+            if (action === 'cerrar') { // Cerrar Caja
+
+                @if (isset($cajaAbierta) && $cajaAbierta){
+                    
+                    
                 cerrarCaja(cajaId).then(() => {
-                    $('#modalConfirmarCerrarCaja').modal('hide');
+                    botonCaja.text('Abrir Caja').removeClass('btn-warning').addClass('btn-primary');
+                    $('#inputCajaId').val(''); // Limpiar el ID de la caja cerrada
+                    console.log('Caja cerrada correctamente');
+                    botonCaja.prop('disabled', false);
                 }).catch(error => {
                     console.error('Error al cerrar la caja:', error);
+                    botonCaja.prop('disabled', false);
                 });
-            });
 
-            // Eventos para otros botones
+                @endif
+
+            }
+            } else { // Abrir Caja
+                abrirCaja().then(nuevaCajaId => {
+                    botonCaja.text('Cerrar Caja').removeClass('btn-primary').addClass('btn-warning');
+                    $('#inputCajaId').val(nuevaCajaId); // Establecer nuevo ID de caja
+                    console.log('Caja abierta con ID:', nuevaCajaId);
+                    botonCaja.prop('disabled', false);
+                }).catch(error => {
+                    console.error('Error al abrir la caja:', error);
+                    botonCaja.prop('disabled', false);
+                });
+            }
+        }
+
+
+
+        $(document).ready(function() {
             $('.clickable-card').click(function(event) {
                 event.preventDefault();
                 const productId = $(this).data('product-id');
@@ -392,7 +369,15 @@
                     });
                 }
             });
+
+            const botonCaja = document.getElementById('botonCaja');
+            if (botonCaja) {
+                botonCaja.addEventListener('click', toggleCaja);
+            }
+            const cajaId = document.getElementById('cajaId');
+            if (cajaId) {
+                cajaId.addEventListener('click', toggleCaja);
+            }
         });
     </script>
-
 @endsection

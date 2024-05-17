@@ -43,7 +43,7 @@
                     @endif
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Venta Details</h3>
+                            <h3 class="card-title">Detalles de la venta</h3>
                         </div>
                         <div class="card-body">
                             <div class="form-group">
@@ -57,6 +57,9 @@
                             </div>
                             <div class="form-group">
                                 <strong>Método de Pago:</strong> {{ $venta->metodo_pago }}
+                            </div>
+                            <div class="form-group">
+                                <strong>Estado de la venta:</strong> {{ $venta->estado ?? 'Procesada' }}
                             </div>
                             <div class="form-group">
                                 <strong>Detalles de la Venta:</strong>

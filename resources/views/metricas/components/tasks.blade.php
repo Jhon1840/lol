@@ -1,8 +1,8 @@
 {{-- resources/views/components/tasks.blade.php --}}
-<div class="col-md-12 col-lg-8">
+
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Tasks</h3>
+            <h3 class="card-title">Registo de Apertura y cierre de cajas</h3>
         </div>
         <div class="table-responsive">
             <table class="table card-table table-vcenter">
@@ -13,7 +13,6 @@
                         <th>Fecha</th>
                         <th>Ventas</th>
                         <th>Estado</th>
-                        <!-- Columna vacía para el checkbox -->
                     </tr>
                 </thead>
                 <tbody>
@@ -39,4 +38,3 @@
             </table>
         </div>
     </div>
-</div>

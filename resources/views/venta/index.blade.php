@@ -128,8 +128,8 @@
                                                                 action="{{ route('cancelar-venta-producto', $venta->id) }}"
                                                                 method="POST" style="display: inline;">
                                                                 @csrf
-                                                                <button type="submit"
-                                                                    class="dropdown-item text-red">Cancelar venta</button>
+                                                                <button type="button" class="dropdown-item text-red" onclick="openCancelModal('{{ route('cancelar-venta-producto', $venta->id) }}')">Cancelar venta</button>
+
                                                             </form>
                                                         </div>
                                                     </div>
@@ -150,4 +150,29 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal de confirmación -->
+<div class="modal fade" id="confirmCancelModal" tabindex="-1" aria-labelledby="confirmCancelLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmCancelLabel">Confirmar Cancelación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas cancelar esta venta?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <form id="cancelForm" action="#" method="POST">
+                    @csrf
+                    <button type="submit" class="btn btn-danger">Cancelar Venta</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 @endsection

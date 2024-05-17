@@ -19,13 +19,11 @@ $precios = Product::pluck('Precio_venta', 'id')->all(); // Agrega esta línea pa
     <select id="metodo_pago" class="form-select" name="metodo_pago">
         <option value="efectivo">Efectivo</option>
         <option value="tarjeta">Tarjeta</option>
-        <option value="qr">QR</option>
     </select>
     <div class="invalid-feedback">
         Por favor seleccione un método de pago.
     </div>
-    <small class="form-hin...
-        $('#pagoEfectivoDiv').hide();t">Seleccione cómo desea realizar el pago.</small>
+    <small class="form-hint">Seleccione cómo desea realizar el pago.</small>
 </div>
 
 <!-- División para pago en efectivo, incluyendo los campos para billetes y monedas -->
@@ -56,6 +54,9 @@ $precios = Product::pluck('Precio_venta', 'id')->all(); // Agrega esta línea pa
     </div>
 </div>
 
+<!-- Inclusión de la vista parcial de la pasarela de pago -->
+@include('venta.components.pasarela_tarjeta')
+
 <div class="form-group mb-3">
     <label class="form-label">{{ Form::label('Nombre', 'Nombre') }}</label>
     <div>
@@ -83,11 +84,9 @@ $precios = Product::pluck('Precio_venta', 'id')->all(); // Agrega esta línea pa
     </div>
 </div>
 
-
 <div class="form-group mb-3">
     <label class="form-label">Total del Carrito</label>
     <input type="text" class="form-control" id="inputTotalCarrito" name="total" readonly>
-
 </div>
 
 <div class="form-footer">
@@ -98,7 +97,6 @@ $precios = Product::pluck('Precio_venta', 'id')->all(); // Agrega esta línea pa
         </div>
     </div>
 </div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
@@ -107,9 +105,14 @@ $precios = Product::pluck('Precio_venta', 'id')->all(); // Agrega esta línea pa
             var metodoPago = $(this).val();
             if (metodoPago === 'efectivo') {
                 $('#pagoEfectivoDiv').show();
+                $('#pasarelaTarjeta').hide();
                 calcularCambio(); 
+            } else if (metodoPago === 'tarjeta') {
+                $('#pasarelaTarjeta').show();
+                $('#pagoEfectivoDiv').hide();
             } else {
                 $('#pagoEfectivoDiv').hide();
+                $('#pasarelaTarjeta').hide();
             }
         });
     
@@ -132,15 +135,4 @@ $precios = Product::pluck('Precio_venta', 'id')->all(); // Agrega esta línea pa
         
         $('#metodo_pago').trigger('change'); 
     });
-    </script>
-    
-
-
-
-
-
-
-
-
-
-<!-- Tu código HTML sigue aquí -->
+</script>

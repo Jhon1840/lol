@@ -1,3 +1,4 @@
+<!-- resources/views/metricas/metricas.blade.php -->
 @extends('tablar::page')
 
 @section('content')
@@ -14,11 +15,11 @@
                                     <span class="bg-primary text-white avatar">
                                         <!-- SVG icon -->
                                         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
-                                            viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                            viewBox="0 0 24 0" stroke-width="2" stroke="currentColor" fill="none"
                                             stroke-linecap="round" stroke-linejoin="round">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                                             <path
-                                                d="M16.7 8a3 3 0 0 0 -2.7 -2h-4a3 3 0 0 0 0 6h4a3 3 0 0 1 0 6h-4a3 3 0 0 1 -2.7 -2">
+                                                d="M16.7 8a3 3 0 0 0 -2.7 -2h-4a3 3 0 0 0 0 6h4a3 3 0 1 1 0 6h-4a3 3 0 0 1 -2.7 -2">
                                             </path>
                                             <path d="M12 3v3m0 12v3"></path>
                                         </svg>
@@ -35,7 +36,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
             <!-- Page body -->
@@ -43,7 +43,6 @@
                 <div class="container-xl">
                     <div class="row row-deck row-cards">
                         <!-- Columna para la tarjeta de totales -->
-
 
                         <!-- Columna para la tabla de productos más vendidos -->
                         <div class="col-md-8">
@@ -89,22 +88,39 @@
                                             <th>Producto</th>
                                             <th>Total Generado</th>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($productosMasRentables as $producto)
-                                            <tr>
-                                                <td>{{ $producto->Nombre }}</td>
-                                                <td>${{ number_format($producto->total_generado, 2) }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($productosMasRentables as $producto)
+                                                <tr>
+                                                    <td>{{ $producto->Nombre }}</td>
+                                                    <td>${{ number_format($producto->total_generado, 2) }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    @include('metricas.components.tasks')
-                </div>
+                    <!-- Nueva fila para las dos secciones lado a lado -->
+                    <div class="row row-deck row-cards">
+                        <div class="col-md-6">
+                            @include('metricas.components.tasks')
+                        </div>
+                        <div class="col-md-6">
+                            @include('metricas.components.productos_menor_stock')
+                        </div>
+                    </div>
 
+                    <!-- Nueva fila para las ventas canceladas -->
+                    <div class="row row-deck row-cards">
+                        <div class="col-md-12">
+                            @include('metricas.components.ventas_canceladas')
+                        </div>
+                    </div>
+                </div>
             </div>
-        @endsection
+        </div>
+    </div>
+@endsection
