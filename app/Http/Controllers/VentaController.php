@@ -6,6 +6,7 @@ use App\Models\Venta;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\DetalleVenta;
+use App\Models\Descuento;
 use LaravelDaily\Invoices\Classes\Party;
 use LaravelDaily\Invoices\Facades\Invoice;
 use LaravelDaily\Invoices\Classes\InvoiceItem;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Caja;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Models\DineroCaja;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 /**
  * Class VentaController
  * @package App\Http\Controllers
@@ -44,18 +47,37 @@ class VentaController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function create()
-    {
-        $products = Product::pluck('Nombre', 'id');
-        $precios = Product::pluck('Precio_venta', 'id');
-        $venta = new Venta();
-        $cajaActual = Caja::where('estado', 1)->first(); // Asumiendo que el modelo Caja tiene un campo 'estado'
+{
+    $products = Product::pluck('Nombre', 'id');
+    $preciosOriginales = Product::pluck('Precio_venta', 'id');
+    $venta = new Venta();
+    $cajaActual = Caja::where('estado', 1)->first(); // Asumiendo que el modelo Caja tiene un campo 'estado'
     
-        // Determinar si la caja está abierta o no
-        $cajaAbierta = !is_null($cajaActual); // true si cajaActual no es null, false de lo contrario
-    
-        // Pasar tanto cajaActual como cajaAbierta a la vista junto con los otros datos
-        return view('venta.create', compact('products', 'precios', 'venta', 'cajaActual', 'cajaAbierta'));
+    // Determinar si la caja está abierta o no
+    $cajaAbierta = !is_null($cajaActual); // true si cajaActual no es null, false de lo contrario
+
+    // Obtener los descuentos aplicables
+    $descuentos = Descuento::where('start_date', '<=', now())
+        ->where('end_date', '>=', now())
+        ->get()
+        ->keyBy('product_id');
+
+    // Calcular los precios con descuento
+    $precios = [];
+    foreach ($preciosOriginales as $id => $precioOriginal) {
+        if (isset($descuentos[$id])) {
+            $descuento = $descuentos[$id];
+            $precioConDescuento = $precioOriginal - ($precioOriginal * ($descuento->discount_percentage / 100));
+            $precios[$id] = $precioConDescuento;
+        } else {
+            $precios[$id] = $precioOriginal;
+        }
     }
+
+    // Pasar tanto cajaActual como cajaAbierta a la vista junto con los otros datos
+    return view('venta.create', compact('products', 'precios', 'venta', 'cajaActual', 'cajaAbierta'));
+}
+
     
 
 
@@ -75,7 +97,6 @@ class VentaController extends Controller
      */
     public function store(Request $request)
     {
-        //dd($request->all());
         try {
             // Validación de los datos recibidos en el formulario
             $request->validate([
@@ -87,10 +108,13 @@ class VentaController extends Controller
                 'total' => 'required|numeric',
                 'productos' => 'required|array',
                 'cambio' => 'nullable|numeric|required_if:metodo_pago,efectivo',
-                'billetes.*' => 'nullable|integer|min:0',
-                'monedas.*' => 'nullable|integer|min:0',
-                //'caja_id' => 'required|integer|exists:cajas,id' 
             ]);
+    
+            try {
+                $caja = Caja::findOrFail($request->input('caja_id'));
+            } catch (ModelNotFoundException $e) {
+                return back()->withErrors(['error' => 'No se encontró una caja abierta con el ID especificado.']);
+            }
     
             // Creación de la venta
             $venta = new Venta();
@@ -103,8 +127,11 @@ class VentaController extends Controller
             $venta->save();
     
             // Actualizar la caja
-            $caja = Caja::findOrFail($venta->caja_id);
-            $caja->dinero += $venta->total; 
+            $dineroEnCaja = $request->total;
+            if ($request->metodo_pago === 'efectivo' && $request->cambio) {
+                $dineroEnCaja -= $request->cambio;
+            }
+            $caja->dinero += $dineroEnCaja;
             $caja->save();
     
             foreach ($request->productos as $prod) {
@@ -123,16 +150,6 @@ class VentaController extends Controller
                 $detalle->precio_unitario = $producto->Precio_venta;
                 $detalle->subtotal = $subtotal;
                 $detalle->save();
-    
-                // Guardar billetes y monedas si el método de pago es efectivo
-                if ($request->metodo_pago === 'efectivo') {
-                    if (!empty($request->billetes)) {
-                        $this->guardarPagos($detalle->id, $request->billetes, 'billete');
-                    }
-                    if (!empty($request->monedas)) {
-                        $this->guardarPagos($detalle->id, $request->monedas, 'moneda');
-                    }
-                }
             }
     
             if (!is_null($request->cambio)) {
@@ -376,22 +393,47 @@ public function cancelar(Request $request)
 
 public function cerrarCaja(Request $request)
 {
+    $request->validate([
+        'caja_id' => 'required|integer|exists:caja,id',
+        'dinero_en_caja' => 'required|numeric',
+        'total_billetes_monedas' => 'required|numeric',
+        'observaciones' => 'nullable|string'
+    ]);
+
     try {
-        $cajaId = $request->input('caja_id');
-        if (!$cajaId) {
-            return response()->json(['success' => false, 'message' => 'ID de caja no proporcionado.']);
-        }
-
-        $caja = Caja::findOrFail($cajaId);
-
-        if ($caja->estado != 'caja abierta') {
-            return response()->json(['success' => false, 'message' => 'La caja no está abierta.']);
-        }
-
+        $caja = Caja::findOrFail($request->caja_id);
         $caja->estado = 'caja cerrada';
+        $caja->dinero_final = $request->total_billetes_monedas;
+        $caja->observaciones = $request->observaciones;
         $caja->save();
 
-        return response()->json(['success' => true, 'message' => 'Caja cerrada correctamente.']);
+        // Guardar billetes y monedas en la tabla dinero_caja
+        $billetes = $request->input('billetes', []);
+        $monedas = $request->input('monedas', []);
+
+        foreach ($billetes as $denominacion => $cantidad) {
+            if ($cantidad > 0) {
+                DineroCaja::create([
+                    'caja_id' => $caja->id,
+                    'tipo' => 'billete',
+                    'denominacion' => $denominacion,
+                    'cantidad' => $cantidad,
+                ]);
+            }
+        }
+
+        foreach ($monedas as $denominacion => $cantidad) {
+            if ($cantidad > 0) {
+                DineroCaja::create([
+                    'caja_id' => $caja->id,
+                    'tipo' => 'moneda',
+                    'denominacion' => $denominacion,
+                    'cantidad' => $cantidad,
+                ]);
+            }
+        }
+
+        return response()->json(['success' => true, 'redirect' => route('ventas.index')]);
     } catch (\Exception $e) {
         return response()->json(['success' => false, 'message' => 'Error al cerrar la caja: ' . $e->getMessage()]);
     }

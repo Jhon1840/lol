@@ -1,5 +1,6 @@
 <!-- resources/views/modals/modal_confirmar_abrir_caja.blade.php -->
-<div class="modal fade" id="modalConfirmarAbrirCaja" tabindex="-1" aria-labelledby="modalConfirmarAbrirCajaLabel" aria-hidden="true">
+<div class="modal fade" id="modalConfirmacionAbrirCaja" tabindex="-1" aria-labelledby="modalConfirmarAbrirCajaLabel"
+    aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -14,7 +15,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
-                <button type="button" class="btn btn-primary" id="confirmarAbrirCaja">Sí</button>
+                <button type="button" class="btn btn-primary" id="confirmarAbrirCaja" onclick="abrirCaja()">Sí</button>
             </div>
         </div>
     </div>

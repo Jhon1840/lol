@@ -47,4 +47,9 @@ class HomeController extends Controller
     {
         return view('usuarios\usuarios');
     }
+
+    public function descuentos()
+    {
+        return view('descuentos\descuentos');
+    }
 }

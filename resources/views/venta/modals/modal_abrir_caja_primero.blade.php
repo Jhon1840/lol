@@ -11,7 +11,6 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalConfirmarAbrirCaja">Abrir Caja</button>
             </div>
         </div>
     </div>

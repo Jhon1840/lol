@@ -1,5 +1,5 @@
-<!-- Modal de Confirmación para Cerrar Caja -->
-<div class="modal fade" id="modalConfirmarCerrarCaja" tabindex="-1" aria-labelledby="modalConfirmarCerrarCajaLabel"
+<!-- resources/views/modals/modal_confirmar_cerrar_caja.blade.php -->
+<div class="modal fade" id="modalConfirmacionCerrarCaja" tabindex="-1" aria-labelledby="modalConfirmarCerrarCajaLabel"
     aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -11,16 +11,45 @@
                 <p>¿Cerrar caja?</p>
                 <p>Vendedor: {{ Auth::user()->name }}</p>
                 <p>Fecha: {{ now()->toDateTimeString() }}</p>
-                <p>Dinero registrado por ventas: <span id="dineroEnCaja">{{ $dineroCajaAbierta }}</span> Bs</p>
-                <input type="hidden" id="dineroEnCajaInput" value="{{ $dineroCajaAbierta }}">
+                <input type="hidden" id="inputCajaId" value="{{ $cajaAbierta ? $cajaAbierta->id : '' }}">
+
+                <h5>Billetes recibidos:</h5>
+                <?php foreach ([200, 100, 50, 20, 10] as $billete) : ?>
+                <div class="form-group mb-2">
+                    <label for="billete<?= $billete ?>" class="form-label">Billetes de Bs<?= $billete ?></label>
+                    <input type="number" class="form-control" id="billete<?= $billete ?>"
+                        name="billetes[<?= $billete ?>]" data-value="<?= $billete ?>"
+                        placeholder="Cantidad de billetes de Bs<?= $billete ?>">
+                </div>
+                <?php endforeach; ?>
+
+                <h5>Monedas recibidas:</h5>
+                <?php foreach ([5, 2, 1, 0.50] as $moneda) : ?>
+                <div class="form-group mb-2">
+                    <label for="moneda<?= str_replace('.', '', $moneda) ?>" class="form-label">Monedas de
+                        Bs<?= $moneda ?></label>
+                    <input type="number" class="form-control" id="moneda<?= str_replace('.', '', $moneda) ?>"
+                        name="monedas[<?= $moneda ?>]" data-value="<?= $moneda ?>"
+                        placeholder="Cantidad de monedas de Bs<?= $moneda ?>">
+                </div>
+                <?php endforeach; ?>
+
+                <div class="form-group mb-3">
+                    <label for="totalBilletesMonedas" class="form-label">Total Billetes y Monedas</label>
+                    <input type="text" class="form-control" id="totalBilletesMonedas" name="totalBilletesMonedas"
+                        readonly>
+                </div>
+
                 <div class="mb-3">
                     <label for="observaciones" class="form-label">Observaciones:</label>
                     <textarea class="form-control" id="observaciones" rows="3"></textarea>
                 </div>
             </div>
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
-                <button type="button" class="btn btn-primary" id="confirmarCerrarCaja">Sí</button>
+                <button type="button" class="btn btn-primary" id="confirmarCerrarCaja"
+                    onclick="cerrarCaja()">Sí</button>
             </div>
         </div>
     </div>

@@ -4,10 +4,14 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\CsvController;
+use App\Http\Controllers\Descuentos;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VentaController;
+use App\Http\Controllers\CajaController;
+
+use App\Http\Controllers\DescuentoController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -87,3 +91,6 @@ Route::post('/ventas/cerrarCaja', [VentaController::class, 'cerrarCaja']);
 Route::post('/ventas/caja/{id}', [VentaController::class, 'getDineroEnCaja']);
 
 
+
+//Descuentos
+Route::resource('/descuentos', App\Http\Controllers\DescuentoController::class);

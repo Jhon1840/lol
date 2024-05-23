@@ -8,7 +8,12 @@ $precios = Product::pluck('Precio_venta', 'id')->all(); // Agrega esta línea pa
 <div class="form-group mb-3">
     <label class="form-label">{{ Form::label('fecha', 'Fecha') }}</label>
     <div>
-        <x-flat-picker name="fecha" :value="$venta->fecha" />
+        @if ($venta)
+            <x-flat-picker name="fecha" :value="$venta->fecha" />
+        @else
+            <x-flat-picker name="fecha" />
+        @endif
+
         {!! $errors->first('fecha', '<div class="invalid-feedback">:message</div>') !!}
         <small class="form-hint">Fecha de la venta.</small>
     </div>
@@ -26,32 +31,10 @@ $precios = Product::pluck('Precio_venta', 'id')->all(); // Agrega esta línea pa
     <small class="form-hint">Seleccione cómo desea realizar el pago.</small>
 </div>
 
-<!-- División para pago en efectivo, incluyendo los campos para billetes y monedas -->
-<div id="pagoEfectivoDiv" style="display:none;">
-    <h5>Billetes recibidos:</h5>
-    <?php foreach ([200, 100, 50, 20, 10] as $billete) : ?>
-    <div class="form-group mb-2">
-        <label for="billete<?= $billete ?>" class="form-label">Billetes de Bs<?= $billete ?></label>
-        <input type="number" class="form-control" id="billete<?= $billete ?>" name="billetes[<?= $billete ?>]"
-            data-value="<?= $billete ?>" placeholder="Cantidad de billetes de Bs<?= $billete ?>">
-    </div>
-    <?php endforeach; ?>
-
-    <h5>Monedas recibidas:</h5>
-    <?php foreach ([5, 2, 1, 0.50] as $moneda) : ?>
-    <div class="form-group mb-2">
-        <label for="moneda<?= str_replace('.', '', $moneda) ?>" class="form-label">Monedas de Bs<?= $moneda ?></label>
-        <input type="number" class="form-control" id="moneda<?= str_replace('.', '', $moneda) ?>"
-            name="monedas[<?= $moneda ?>]" data-value="<?= $moneda ?>"
-            placeholder="Cantidad de monedas de Bs<?= $moneda ?>">
-    </div>
-    <?php endforeach; ?>
-
-    <div class="form-group mb-3">
-        <label for="cambio" class="form-label">Cambio</label>
-        <input type="text" class="form-control" id="cambio" name="cambio" placeholder="Cambio a devolver">
-        <small class="form-hint">Ingrese el cambio a devolver al cliente.</small>
-    </div>
+<div class="form-group mb-3">
+    <label for="cambio" class="form-label">Cambio</label>
+    <input type="text" class="form-control" id="cambio" name="cambio" placeholder="Cambio a devolver" required>
+    <small class="form-hint">Ingrese el cambio a devolver al cliente.</small>
 </div>
 
 <!-- Inclusión de la vista parcial de la pasarela de pago -->
@@ -60,16 +43,16 @@ $precios = Product::pluck('Precio_venta', 'id')->all(); // Agrega esta línea pa
 <div class="form-group mb-3">
     <label class="form-label">{{ Form::label('Nombre', 'Nombre') }}</label>
     <div>
-        {{ Form::text('Nombre', $venta->cliente, ['class' => 'form-control' . ($errors->has('cliente') ? ' is-invalid' : ''), 'placeholder' => 'Nombre']) }}
+        {{ Form::text('Nombre', $venta->cliente, ['class' => 'form-control' . ($errors->has('cliente') ? ' is-invalid' : ''), 'placeholder' => 'Nombre', 'required' => 'required']) }}
         {!! $errors->first('cliente', '<div class="invalid-feedback">:message</div>') !!}
-        <small class="form-hint">Nombre .</small>
+        <small class="form-hint">Nombre del cliente.</small>
     </div>
 </div>
 
 <div class="form-group mb-3">
     <label class="form-label">{{ Form::label('NIT', 'NIT') }}</label>
     <div>
-        {{ Form::text('NIT', null, ['class' => 'form-control' . ($errors->has('NIT') ? ' is-invalid' : ''), 'placeholder' => 'NIT']) }}
+        {{ Form::text('NIT', null, ['class' => 'form-control' . ($errors->has('NIT') ? ' is-invalid' : ''), 'placeholder' => 'NIT', 'required' => 'required']) }}
         {!! $errors->first('NIT', '<div class="invalid-feedback">:message</div>') !!}
         <small class="form-hint">Ingrese el NIT del cliente.</small>
     </div>
@@ -78,7 +61,7 @@ $precios = Product::pluck('Precio_venta', 'id')->all(); // Agrega esta línea pa
 <div class="form-group mb-3">
     <label class="form-label">{{ Form::label('CI', 'Cédula de Identidad') }}</label>
     <div>
-        {{ Form::text('CI', null, ['class' => 'form-control' . ($errors->has('CI') ? ' is-invalid' : ''), 'placeholder' => 'CI']) }}
+        {{ Form::text('CI', null, ['class' => 'form-control' . ($errors->has('CI') ? ' is-invalid' : ''), 'placeholder' => 'CI', 'required' => 'required']) }}
         {!! $errors->first('CI', '<div class="invalid-feedback">:message</div>') !!}
         <small class="form-hint">Ingrese la cédula de identidad del cliente.</small>
     </div>
@@ -106,7 +89,7 @@ $precios = Product::pluck('Precio_venta', 'id')->all(); // Agrega esta línea pa
             if (metodoPago === 'efectivo') {
                 $('#pagoEfectivoDiv').show();
                 $('#pasarelaTarjeta').hide();
-                calcularCambio(); 
+                calcularCambio();
             } else if (metodoPago === 'tarjeta') {
                 $('#pasarelaTarjeta').show();
                 $('#pagoEfectivoDiv').hide();
@@ -115,24 +98,24 @@ $precios = Product::pluck('Precio_venta', 'id')->all(); // Agrega esta línea pa
                 $('#pasarelaTarjeta').hide();
             }
         });
-    
+
         $('#pagoEfectivoDiv').find('input[type="number"]').on('input', calcularCambio);
-    
+
         function calcularCambio() {
             var totalEfectivo = 0;
             $('#pagoEfectivoDiv input[type="number"]').each(function() {
-                var valor = parseFloat($(this).data('value')); 
+                var valor = parseFloat($(this).data('value'));
                 var cantidad = parseInt($(this).val()) || 0;
                 totalEfectivo += valor * cantidad;
             });
-    
+
             var totalCarrito = parseFloat($('#inputTotalCarrito').val()) || 0;
-    
+
             var cambio = totalEfectivo - totalCarrito;
-    
+
             $('#cambio').val(cambio.toFixed(2));
         }
-        
-        $('#metodo_pago').trigger('change'); 
+
+        $('#metodo_pago').trigger('change');
     });
 </script>

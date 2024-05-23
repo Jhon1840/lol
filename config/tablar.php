@@ -181,6 +181,13 @@ return [
             'url' => '/usuarios',
             'hasAnyPermission' => ['writterr']
         ],
+
+        [
+            'text' => 'Descuentos',
+            'icon' => 'ti ti-basket-discount',
+            'url' => '/descuentos',
+            'hasAnyPermission' => ['writterr']
+        ],
         
         
 
