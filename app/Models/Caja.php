@@ -12,7 +12,13 @@ class Caja extends Model
     protected $table = 'caja';
 
     protected $fillable = [
-        'nombre_vendedor', 'dinero', 'fecha', 'id_vendedor', 'estado'
+        'nombre_vendedor',
+        'dinero',
+        'fecha',
+        'id_vendedor',
+        'estado',
+        'observaciones',
+        'total_billetes_monedas'
     ];
 
     protected $hidden = [];

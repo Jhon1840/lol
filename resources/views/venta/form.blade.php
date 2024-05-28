@@ -31,10 +31,17 @@ $precios = Product::pluck('Precio_venta', 'id')->all(); // Agrega esta línea pa
     <small class="form-hint">Seleccione cómo desea realizar el pago.</small>
 </div>
 
+<div id="pagoEfectivoDiv" class="form-group mb-3">
+    <label for="dinero_recibido" class="form-label">Dinero Recibido</label>
+    <input type="number" class="form-control" id="dinero_recibido" name="dinero_recibido"
+        placeholder="Dinero recibido del cliente" required>
+    <small class="form-hint">Ingrese el dinero recibido del cliente.</small>
+</div>
+
 <div class="form-group mb-3">
     <label for="cambio" class="form-label">Cambio</label>
-    <input type="text" class="form-control" id="cambio" name="cambio" placeholder="Cambio a devolver" required>
-    <small class="form-hint">Ingrese el cambio a devolver al cliente.</small>
+    <input type="text" class="form-control" id="cambio" name="cambio" placeholder="Cambio a devolver" readonly>
+    <small class="form-hint">Cambio a devolver al cliente.</small>
 </div>
 
 <!-- Inclusión de la vista parcial de la pasarela de pago -->
@@ -81,7 +88,6 @@ $precios = Product::pluck('Precio_venta', 'id')->all(); // Agrega esta línea pa
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function() {
         $('#metodo_pago').change(function() {
@@ -89,7 +95,6 @@ $precios = Product::pluck('Precio_venta', 'id')->all(); // Agrega esta línea pa
             if (metodoPago === 'efectivo') {
                 $('#pagoEfectivoDiv').show();
                 $('#pasarelaTarjeta').hide();
-                calcularCambio();
             } else if (metodoPago === 'tarjeta') {
                 $('#pasarelaTarjeta').show();
                 $('#pagoEfectivoDiv').hide();
@@ -99,19 +104,13 @@ $precios = Product::pluck('Precio_venta', 'id')->all(); // Agrega esta línea pa
             }
         });
 
-        $('#pagoEfectivoDiv').find('input[type="number"]').on('input', calcularCambio);
+        $('#dinero_recibido').on('input', calcularCambio);
 
         function calcularCambio() {
-            var totalEfectivo = 0;
-            $('#pagoEfectivoDiv input[type="number"]').each(function() {
-                var valor = parseFloat($(this).data('value'));
-                var cantidad = parseInt($(this).val()) || 0;
-                totalEfectivo += valor * cantidad;
-            });
-
+            var dineroRecibido = parseFloat($('#dinero_recibido').val()) || 0;
             var totalCarrito = parseFloat($('#inputTotalCarrito').val()) || 0;
 
-            var cambio = totalEfectivo - totalCarrito;
+            var cambio = dineroRecibido - totalCarrito;
 
             $('#cambio').val(cambio.toFixed(2));
         }

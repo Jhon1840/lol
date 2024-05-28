@@ -15,7 +15,9 @@ class DineroCaja extends Model
         'caja_id',
         'tipo',
         'denominacion',
-        'cantidad'
+        'cantidad',
+        'total'
+
     ];
 
     public function caja()

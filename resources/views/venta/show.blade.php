@@ -46,9 +46,13 @@
                             <h3 class="card-title">Detalles de la venta</h3>
                         </div>
                         <div class="card-body">
-                            <div class="form-group">
-                                <strong>Fecha:</strong> {{ $venta->fecha }}
-                            </div>
+                            <!-- resources/views/venta/show.blade.php -->
+                            @if (isset($venta))
+                                <p>Fecha: {{ $venta->fecha }}</p>
+                            @else
+                                <p>No hay información de la venta disponible.</p>
+                            @endif
+
                             <div class="form-group">
                                 <strong>Total:</strong> {{ $venta->total }}
                             </div>

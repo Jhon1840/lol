@@ -86,7 +86,8 @@ Route::get('/test-file', function () {
 Route::post('/ventas/toggleCaja', [VentaController::class, 'toggleCaja'])->name('ventas.toggleCaja');
 
 //cerrar caja
-Route::post('/ventas/cerrarCaja', [VentaController::class, 'cerrarCaja']);
+Route::post('/ventas/cerrarCaja', [VentaController::class, 'cerrarCaja'])->name('ventas.cerrarCaja');
+
 
 Route::post('/ventas/caja/{id}', [VentaController::class, 'getDineroEnCaja']);
 

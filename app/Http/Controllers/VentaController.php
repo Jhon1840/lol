@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\DineroCaja;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Barryvdh\DomPDF\Facade\Pdf;
 /**
  * Class VentaController
  * @package App\Http\Controllers
@@ -119,7 +120,7 @@ class VentaController extends Controller
             // Creación de la venta
             $venta = new Venta();
             $venta->fecha = $request->fecha;
-            $venta->total = $request->total;
+            $venta->total = $request->cambio ;
             $venta->cliente = $request->Nombre;
             $venta->metodo_pago = $request->metodo_pago;
             $venta->vendedor = $request->user() ? $request->user()->name : null;
@@ -151,7 +152,6 @@ class VentaController extends Controller
                 $detalle->subtotal = $subtotal;
                 $detalle->save();
             }
-    
             if (!is_null($request->cambio)) {
                 $venta->cambio = $request->cambio;
                 $venta->save();
@@ -390,54 +390,70 @@ public function cancelar(Request $request)
     }
 }
 
-
+//dd($request->all());
 public function cerrarCaja(Request $request)
-{
-    $request->validate([
-        'caja_id' => 'required|integer|exists:caja,id',
-        'dinero_en_caja' => 'required|numeric',
-        'total_billetes_monedas' => 'required|numeric',
-        'observaciones' => 'nullable|string'
-    ]);
+    {
+        DB::beginTransaction();
+        try {
+            // Validación de datos
+            $validated = $request->validate([
+                'caja_id' => 'required|exists:caja,id',
+                'billetes' => 'array',
+                'monedas' => 'array',
+                'observaciones' => 'nullable|string',
+            ]);
 
-    try {
-        $caja = Caja::findOrFail($request->caja_id);
-        $caja->estado = 'caja cerrada';
-        $caja->dinero_final = $request->total_billetes_monedas;
-        $caja->observaciones = $request->observaciones;
-        $caja->save();
-
-        // Guardar billetes y monedas en la tabla dinero_caja
-        $billetes = $request->input('billetes', []);
-        $monedas = $request->input('monedas', []);
-
-        foreach ($billetes as $denominacion => $cantidad) {
-            if ($cantidad > 0) {
-                DineroCaja::create([
-                    'caja_id' => $caja->id,
-                    'tipo' => 'billete',
-                    'denominacion' => $denominacion,
-                    'cantidad' => $cantidad,
-                ]);
+            // Obtener la caja abierta
+            $caja = Caja::find($validated['caja_id']);
+            if (!$caja) {
+                return back()->withErrors(['caja_id' => 'La caja no existe.']);
             }
-        }
 
-        foreach ($monedas as $denominacion => $cantidad) {
-            if ($cantidad > 0) {
-                DineroCaja::create([
-                    'caja_id' => $caja->id,
-                    'tipo' => 'moneda',
-                    'denominacion' => $denominacion,
-                    'cantidad' => $cantidad,
-                ]);
+            // Calcular el total de billetes y monedas
+            $totalBilletesMonedas = 0;
+            foreach ($validated['billetes'] as $denominacion => $cantidad) {
+                if (!is_null($cantidad)) {
+                    $totalBilletesMonedas += $denominacion * $cantidad;
+                }
             }
-        }
+            foreach ($validated['monedas'] as $denominacion => $cantidad) {
+                if (!is_null($cantidad)) {
+                    $totalBilletesMonedas += $denominacion * $cantidad;
+                }
+            }
 
-        return response()->json(['success' => true, 'redirect' => route('ventas.index')]);
-    } catch (\Exception $e) {
-        return response()->json(['success' => false, 'message' => 'Error al cerrar la caja: ' . $e->getMessage()]);
+            $caja->estado = 'caja cerrada';
+            $caja->observaciones = $validated['observaciones'];
+            $caja->total_billetes_monedas = $totalBilletesMonedas;
+            $caja->save();
+
+            
+            try {
+                // Preparar datos para el PDF
+                $billetes = $validated['billetes'];
+                $monedas = $validated['monedas'];
+
+                // Cargar la vista con los datos y generar el PDF
+                $pdf = PDF::loadView('caja_cierre', compact('caja', 'totalBilletesMonedas', 'billetes', 'monedas'));
+                $filename = 'cierre_caja_' . $caja->id . '.pdf';
+                $path = storage_path('' . $filename);
+
+                // Guardar el PDF en el sistema de archivos
+                $pdf->save($path);
+            } catch (\Exception $e) {
+                Log::error('Error al generar o guardar el PDF: ' . $e->getMessage());
+                throw new \Exception("Error al generar o guardar el PDF: " . $e->getMessage());
+            }
+
+            DB::commit();
+            return redirect()->route('ventas.create')->with('success', 'Caja cerrada correctamente y PDF generado.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('ventas.create')->with('error', 'Error al cerrar la caja: ' . $e->getMessage());
+        }
     }
-}
+
+
 
 public function getDineroEnCaja($id)
 {
