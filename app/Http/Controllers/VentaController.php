@@ -110,7 +110,6 @@ class VentaController extends Controller
                 'productos' => 'required|array',
                 'cambio' => 'nullable|numeric|required_if:metodo_pago,efectivo',
             ]);
-    
             try {
                 $caja = Caja::findOrFail($request->input('caja_id'));
             } catch (ModelNotFoundException $e) {

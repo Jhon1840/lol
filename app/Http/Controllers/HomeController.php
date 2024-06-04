@@ -23,6 +23,8 @@ class HomeController extends Controller
      */
     public function index()
     {
+
+        
         
         $ventas = Venta::paginate(10);
 
@@ -35,9 +37,13 @@ class HomeController extends Controller
     {
         return view('venta\venta');
     }
-    public function ppp()
+    public function ppp(ProductController $table, Request $request)
     {
-        return view('home');
+        if ($request->expectsJson()) {
+            return $table->getData($request);
+        }
+
+        return view('home', compact('table'));
     }
     public function metricas()
     {

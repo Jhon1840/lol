@@ -158,7 +158,7 @@
                                                                     Delete
                                                                 </button>
                                                             </form>
-                                                           
+
                                                         </div>
                                                     </div>
                                                 </div>
@@ -181,8 +181,10 @@
                                 <div class="row">
                                     <div class="col-12">
                                         <div class="mb-3">
+
                                             <label for="file_svc" class="form-label">Importar archivo CSV:</label>
                                             <input type="file" class="form-control" id="file_svc" name="file_svc">
+
                                         </div>
                                         <div class="mb-3">
                                             <button type="submit" class="btn btn-primary">Importar</button>

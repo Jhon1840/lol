@@ -3,8 +3,19 @@
 @section('content')
     <div class="container container-tight py-4">
         <div class="text-center mb-1 mt-5">
-
+            <a href="" class="navbar-brand navbar-brand-autodark">
+                <img src="https://img.freepik.com/vector-premium/vector-logotipo-cerdo_509807-77.jpg" height="46"
+                    alt="" class="circular-image">
+            </a>
         </div>
+        <style>
+            .circular-image {
+                width: 146px;
+                height: 146px;
+                border-radius: 50%;
+                object-fit: cover;
+            }
+        </style>
         <div class="card card-md">
             <div class="card-body">
                 <h2 class="h2 text-center mb-4">Login to your account</h2>
@@ -58,8 +69,5 @@
                     </div>
                 </form>
             </div>
-
-
         </div>
-
     @endsection
