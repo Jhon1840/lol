@@ -111,7 +111,7 @@ class ProductController extends Controller
 
         $product->update($request->all());
 
-        return redirect()->route('products.index')
+        return redirect()->route('product.index')
             ->with('success', 'Product updated successfully');
     }
 
@@ -121,31 +121,21 @@ class ProductController extends Controller
      * @throws \Exception
      */
     public function destroy($id)
-    {
-        $product = Product::find($id)->delete();
+{
+    $product = Product::find($id);
 
-        return redirect()->route('products.index')
-            ->with('success', 'Product deleted successfully');
+    if (!$product) {
+        // Si no se encuentra el producto, redirige con un mensaje de error.
+        return redirect()->route('product.index')->with('error', 'Product not found.');
     }
 
-    public function upload(Request $request)
-    {
-        // Validar la solicitud
-        $request->validate([
-            'file' => 'required|mimes:csv,txt|max:2048',
-        ]);
+    // Si el producto existe, procede a eliminarlo.
+    $product->delete();
 
-        // Almacenar el archivo
-        $file = $request->file('file');
-        $path = Storage::put('public/productos', $file);
+    // Redirige con un mensaje de éxito.
+    return redirect()->route('product.index')->with('success', 'Product deleted successfully');
+}
 
-        // Renombrar el archivo a 'producto.csv'
-        Storage::move($path, 'public/productos/producto.csv');
 
-        // Ejecutar el seeder (asegúrate de reemplazar 'FrontuserSeeder' con el nombre real de tu seeder)
-        Artisan::call('db:seed', ['--class' => 'FrontuserSeeder']);
 
-        // Redirigir al usuario a una página de éxito (opcional)
-        return redirect()->route('home')->with('success', 'Archivo CSV subido y procesado correctamente.');
-    }
 }

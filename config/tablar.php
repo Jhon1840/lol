@@ -151,13 +151,7 @@ return [
             'hasAnyPermission' => ['writterr']
         ],
 
-        [
-            'text' => 'PPP',
-            'icon' => 'ti ti-shopping-cart',
-            'url' => '/ppp',
-            'hasAnyPermission' => ['writterr']
-            
-        ],
+        
 
         [
             'text' => 'Venta',

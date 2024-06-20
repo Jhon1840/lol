@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\Venta;
 use App\Models\Caja;
+use Carbon\Carbon;
 
 class Metricas extends Controller
 {
@@ -44,5 +45,48 @@ class Metricas extends Controller
 
         return view('metricas.metricas', compact('products', 'productosMasVendidos', 'maxVendidos', 'totalVentas', 'totalRecaudado', 'productosMasRentables', 'productosMenorStock', 'ventasCanceladas', 'totalDineroDevuelto', 'tasks'))
             ->with('i', (request()->input('page', 1) - 1) * $products->perPage());
+    }
+
+    public function getMostSoldProducts($period)
+    {
+        switch ($period) {
+            case 'day':
+                $productosMasVendidos = DB::table('venta_detalles')
+                    ->join('products', 'venta_detalles.producto_id', '=', 'products.id')
+                    ->select('products.Nombre', DB::raw('SUM(venta_detalles.cantidad) as total_vendido'))
+                    ->whereDate('venta_detalles.created_at', '=', Carbon::today())
+                    ->groupBy('products.Nombre')
+                    ->orderByDesc('total_vendido')
+                    ->get();
+                break;
+            case 'week':
+                $productosMasVendidos = DB::table('venta_detalles')
+                    ->join('products', 'venta_detalles.producto_id', '=', 'products.id')
+                    ->select('products.Nombre', DB::raw('SUM(venta_detalles.cantidad) as total_vendido'))
+                    ->whereBetween('venta_detalles.created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+                    ->groupBy('products.Nombre')
+                    ->orderByDesc('total_vendido')
+                    ->get();
+                break;
+            case 'month':
+                $productosMasVendidos = DB::table('venta_detalles')
+                    ->join('products', 'venta_detalles.producto_id', '=', 'products.id')
+                    ->select('products.Nombre', DB::raw('SUM(venta_detalles.cantidad) as total_vendido'))
+                    ->whereMonth('venta_detalles.created_at', '=', Carbon::now()->month)
+                    ->groupBy('products.Nombre')
+                    ->orderByDesc('total_vendido')
+                    ->get();
+                break;
+            default:
+                return response()->json(['error' => 'Invalid period'], 400);
+        }
+
+        $labels = $productosMasVendidos->pluck('Nombre');
+        $data = $productosMasVendidos->pluck('total_vendido');
+
+        return response()->json([
+            'labels' => $labels,
+            'data' => $data,
+        ]);
     }
 }

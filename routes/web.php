@@ -65,6 +65,9 @@ Route::resource('/ventas', App\Http\Controllers\VentaController::class);
 //Metricas
 Route::get('/metricas', [\App\Http\Controllers\Metricas::class, 'index'])->name('metricas');
 
+//metricas
+Route::get('/productos-mas-vendidos/{period}', [\App\Http\Controllers\Metricas::class, 'getMostSoldProducts']);
+
 // Ruta para manejar la solicitud AJAX
 Route::post('/ventas/proceedPago', 'VentaController@proceedPago')->name('ventas.proceedPago');
 
@@ -95,3 +98,4 @@ Route::post('/ventas/caja/{id}', [VentaController::class, 'getDineroEnCaja']);
 
 //Descuentos
 Route::resource('/descuentos', App\Http\Controllers\DescuentoController::class);
+

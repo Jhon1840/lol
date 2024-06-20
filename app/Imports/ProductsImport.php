@@ -18,16 +18,28 @@ class ProductsImport implements ToCollection, WithBatchInserts, WithHeadingRow
                 ->first();
 
             if ($existingProduct) {
-                $existingProduct->stock += $row['stock'];
+                $stockAnterior = $existingProduct->stock;
+                $precioCompraAnterior = $existingProduct->Precio_compra;
+                $nuevoStock = $stockAnterior + $row['stock'];
+                
+                $nuevoCostoTotal = ($stockAnterior * $precioCompraAnterior) + ($row['stock'] * $row['precio_compra']);
+                $nuevoPPP = $nuevoCostoTotal / $nuevoStock;
+
+                $existingProduct->stock = $nuevoStock;
+                $existingProduct->Precio_compra = $nuevoPPP;
+                $existingProduct->Precio_venta = $nuevoPPP * 1.20; 
                 $existingProduct->save();
             } else {
+                $ppp = $row['precio_compra']; 
+                $precioVenta = $ppp * 1.20; 
+
                 Product::create([
                     'Nombre' => $row['nombre'],
                     'Descripcion' => $row['descripcion'],
                     'Proveedor' => $row['proveedor'],
                     'stock' => $row['stock'],
-                    'Precio_venta' => $row['precio_venta'],
-                    'Precio_compra' => $row['precio_compra'],
+                    'Precio_compra' => $ppp,
+                    'Precio_venta' => $precioVenta,
                     'Fecha' => \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['fecha']),
                 ]);
             }
