@@ -147,7 +147,10 @@ return [
         [
             'text' => 'Productos',
             'icon' => 'ti ti-shopping-cart',
-            'url' => '/product',
+            'url' => '/product', 
+
+
+            
             'hasAnyPermission' => ['writterr']
         ],
 
