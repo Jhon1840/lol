@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\vENTA;
+use App\Models\Venta;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
