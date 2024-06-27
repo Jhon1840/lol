@@ -151,7 +151,7 @@ return [
 
 
             
-            'hasAnyPermission' => ['writterr']
+            'hasAnyPermission' => ['admin']
         ],
 
         
@@ -168,7 +168,7 @@ return [
             'text' => 'Metricas',
             'icon' => 'ti ti-adjustments-dollar',
             'url' => '/metricas',
-            'hasAnyPermission' => ['writterr']
+            'hasAnyPermission' => ['admin']
             
         ],
 
@@ -176,14 +176,14 @@ return [
             'text' => 'Usuarios',
             'icon' => 'ti ti-users',
             'url' => '/usuarios',
-            'hasAnyPermission' => ['writterr']
+            'hasAnyPermission' => ['admin']
         ],
 
         [
             'text' => 'Descuentos',
             'icon' => 'ti ti-basket-discount',
             'url' => '/descuentos',
-            'hasAnyPermission' => ['writterr']
+            'hasAnyPermission' => ['admin']
         ],
         
         
