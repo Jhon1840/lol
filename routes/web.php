@@ -95,7 +95,14 @@ Route::post('/ventas/cerrarCaja', [VentaController::class, 'cerrarCaja'])->name(
 Route::post('/ventas/caja/{id}', [VentaController::class, 'getDineroEnCaja']);
 
 
+Route::post('/ventas/realizar', [VentaController::class, 'realizarVenta'])->name('realizar');
+
 
 //Descuentos
 Route::resource('/descuentos', App\Http\Controllers\DescuentoController::class);
 
+Route::get('/facturas', [\App\Http\Controllers\Facturas::class, 'index'])->name('facturas');
+
+Route::get('/caja', [CajaController::class, 'index'])->name('caja');
+
+Route::post('/user', [UserController::class, 'store'])->name('user.store');

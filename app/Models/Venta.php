@@ -24,7 +24,7 @@ class Venta extends Model
     ];
 
     protected $fillable = [
-        'fecha', 'total', 'cliente', 'metodo_pago', 'estado', 'vendedor', 'cambio', 'caja_id'
+        'fecha', 'total', 'cliente', 'metodo_pago', 'estado', 'vendedor', 'cambio', 'caja_id', 'factura_url',
     ];
 
     public function ventaDetalles()

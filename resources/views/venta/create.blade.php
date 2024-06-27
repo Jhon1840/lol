@@ -69,11 +69,13 @@
                             <h3 class="card-title">Detalles de la venta</h3>
                         </div>
                         <div class="card-body">
-                            <form method="POST" action="{{ route('realizar-venta') }}" id="ajaxForm"
+                            <form method="POST" action="{{ route('realizar') }}" id="ajaxForm"
                                 enctype="multipart/form-data">
                                 @csrf
                                 @include('venta.prubea')
+                                <!-- Asegúrate que el nombre del archivo incluido sea correcto (prueba, no prubea) -->
                             </form>
+
                         </div>
                     </div>
                 </div>

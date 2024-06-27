@@ -1,15 +1,33 @@
 let carrito = [];
 
-function addToCart(productId, productName, price) {
+function mostrarAdvertencia(mensaje) {
+    $('#advertenciaModalBody').text(mensaje);
+    var modal = new bootstrap.Modal(document.getElementById('advertenciaModal'));
+    modal.show();
+}
+
+function addToCart(productId, productName, price, stock) {
     const index = carrito.findIndex(item => item.id === productId);
+    
     if (index > -1) {
+        // Si el producto ya está en el carrito
+        if (carrito[index].cantidad >= stock) {
+            mostrarAdvertencia(`No puedes añadir más unidades de ${productName}. El stock disponible es ${stock}.`);
+            return;
+        }
         carrito[index].cantidad += 1;
     } else {
+        // Si es un nuevo producto
+        if (stock <= 0) {
+            mostrarAdvertencia(`No puedes añadir ${productName} porque no hay stock disponible.`);
+            return;
+        }
         carrito.push({
             id: productId,
             nombre: productName,
             cantidad: 1,
-            precio: price
+            precio: price,
+            stock: stock
         });
     }
     actualizarCarrito();
@@ -19,15 +37,21 @@ function actualizarCarrito() {
     let subtotal = 0;
     $('#carrito').empty();
     $('#productosForm').empty();
-
+    
     carrito.forEach(item => {
+        // Asegurarse de que la cantidad no exceda el stock
+        if (item.cantidad > item.stock) {
+            mostrarAdvertencia(`La cantidad de ${item.nombre} (${item.cantidad}) excede el stock disponible (${item.stock}). Se ha ajustado al máximo disponible.`);
+            item.cantidad = item.stock;
+        }
+        
         const subtotalItem = item.cantidad * item.precio;
         subtotal += subtotalItem;
-
+        
         $('#carrito').append(
-            `<li>${item.nombre} - Cantidad: ${item.cantidad} - Subtotal: $${subtotalItem.toFixed(2)}</li>`
+            `<li>${item.nombre} - Cantidad: ${item.cantidad}/${item.stock} - Subtotal: $${subtotalItem.toFixed(2)}</li>`
         );
-
+        
         $('#productosForm').append(`
             <input type="hidden" name="productos[${item.id}][id]" value="${item.id}">
             <input type="hidden" name="productos[${item.id}][cantidad]" value="${item.cantidad}">
@@ -35,16 +59,27 @@ function actualizarCarrito() {
             <input type="hidden" name="productos[${item.id}][subtotal]" value="${subtotalItem}">
         `);
     });
-
+    
     const iva = subtotal * 0.13;
     const total = subtotal + iva;
     const totalRedondeado = Math.ceil(total);
-
+    
     $('#subtotal').text(`$${subtotal.toFixed(2)}`);
     $('#iva').text(`$${iva.toFixed(2)}`);
     $('#total').text(`$${totalRedondeado}`);
     $('#inputTotalCarrito').val(totalRedondeado);
 }
+
+// Función para reiniciar el carrito
+function reiniciarCarrito() {
+    carrito = [];
+    actualizarCarrito();
+}
+
+// Asegúrate de llamar a esta función cuando se cargue la página
+$(document).ready(function() {
+    reiniciarCarrito();
+});
 
 function abrirCaja() {
     return fetch('/ventas/toggleCaja', {
@@ -185,17 +220,13 @@ $(document).ready(function() {
         $('#totalBilletesMonedas').val(total.toFixed(2));
     }
 
-    $('.clickable-card').click(function(event) {
-        event.preventDefault();
+    $('.clickable-card').on('click', function() {
         const productId = $(this).data('product-id');
         const productName = $(this).data('product-name');
         const price = parseFloat($(this).data('product-price'));
-
-        if (!cajaAbierta) {
-            $('#modalAbrirCajaPrimero').modal('show');
-        } else {
-            addToCart(productId, productName, price);
-        }
+        const stock = parseInt($(this).data('product-stock'));
+        
+        addToCart(productId, productName, price, stock);
     });
 
     $('#modalCancelar').on('show.bs.modal', function() {

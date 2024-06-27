@@ -113,14 +113,26 @@ class ProductController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Product $product)
-    {
-        request()->validate(Product::$rules);
+{
+    request()->validate(Product::$rules);
 
-        $product->update($request->all());
+    $input = $request->all();
+    
+    if ($request->hasFile('image_url')) {
+        if ($product->image_url && Storage::exists($product->image_url)) {
+            Storage::delete($product->image_url);
+        }
 
-        return redirect()->route('product.index')
-            ->with('success', 'Product updated successfully');
+        $path = $request->file('image_url')->store('public/products');
+        $input['image_url'] = Storage::url($path);
     }
+
+    $product->update($input);
+
+    return redirect()->route('product.index')
+        ->with('success', 'Product updated successfully');
+}
+
 
     /**
      * @param int $id

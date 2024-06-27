@@ -173,6 +173,25 @@ return [
         ],
 
         [
+            'text' => 'Control',
+            'url' => '#',
+            'icon' => 'ti ti-help',
+            'hasAnyPermission' => ['admin'],
+            'submenu' => [
+                [
+                    'text' => 'Cierre de Caja',
+                    'url' => '/caja',
+                    'icon' => 'ti ti-article'
+                ],
+                [
+                    'text' => 'Facturas',
+                    'url' => '/facturas',
+                    'icon' => 'ti ti-article'
+                ]
+            ],
+        ],
+
+        [
             'text' => 'Usuarios',
             'icon' => 'ti ti-users',
             'url' => '/usuarios',

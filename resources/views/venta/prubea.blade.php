@@ -11,9 +11,10 @@
         ->first();
     $dineroCajaAbierta = $cajaAbierta ? $cajaAbierta->dinero : 0;
 
-    // Obtener los productos y precios originales
+    // Obtener los productos, precios originales y el stock
     $products = Product::pluck('Nombre', 'id');
     $preciosOriginales = Product::pluck('Precio_venta', 'id');
+    $stocks = Product::pluck('Stock', 'id'); // Asegúrate de tener una columna 'Stock' en tu tabla 'products'
     $productImages = Product::pluck('image_url', 'id'); // Obteniendo URLs de imágenes
 
     // Obtener los descuentos aplicables
@@ -34,6 +35,7 @@
         }
     }
 @endphp
+
 
 
 @extends('tablar::page')
@@ -82,11 +84,14 @@
                     <!-- Productos -->
                     <div class="row row-cards">
                         <!-- Product Cards -->
+
+
                         @foreach ($products as $id => $nombre)
                             <div class="col-sm-6 col-lg-4">
                                 <div class="card card-sm clickable-card bg-dark text-white"
                                     data-product-id="{{ $id }}" data-product-name="{{ $nombre }}"
-                                    data-product-price="{{ $precios[$id] }}" style="cursor: pointer; position: relative;">
+                                    data-product-price="{{ $precios[$id] }}" data-product-stock="{{ $stocks[$id] }}"
+                                    style="cursor: pointer; position: relative;">
                                     <div class="image-container">
                                         <a href="#" class="d-block">
                                             <img src="{{ $productImages[$id] ?? 'https://png.pngtree.com/png-vector/20220519/ourlarge/pngtree-premium-white-icon-with-crown-on-black-background-vector-png-image_46216252.jpg' }}"
@@ -95,23 +100,18 @@
                                     </div>
                                     <div class="card-body">
                                         <h5 class="card-title">{{ $nombre }}</h5>
-                                        @if ($precios[$id] < $preciosOriginales[$id])
-                                            <p class="text-danger">
-                                                <del>Precio: ${{ $preciosOriginales[$id] }}</del>
-                                            </p>
-                                            <p class="text-success">Descuento aplicado:
-                                                ${{ number_format($preciosOriginales[$id] - $precios[$id], 2) }}</p>
-                                            <p>Precio con descuento: ${{ $precios[$id] }}</p>
-                                        @else
-                                            <p>Precio: ${{ $precios[$id] }}</p>
-                                        @endif
+                                        <p>Precio: ${{ $precios[$id] }}</p>
+                                        <!-- Muestra el stock disponible -->
+                                        <p>Stock: {{ $stocks[$id] }}</p>
                                     </div>
-                                    @if ($precios[$id] < $preciosOriginales[$id])
+                                    @if (isset($descuentos[$id]))
                                         <div class="discount-label bg-danger text-white">Descuento</div>
                                     @endif
                                 </div>
                             </div>
                         @endforeach
+
+
 
                     </div>
                 </div>
@@ -220,4 +220,22 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal para advertencias -->
+<div class="modal fade" id="advertenciaModal" tabindex="-1" aria-labelledby="advertenciaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="advertenciaModalLabel">Advertencia</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="advertenciaModalBody">
+          <!-- El mensaje se insertará aquí dinámicamente -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
 @endsection

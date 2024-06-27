@@ -1,5 +1,5 @@
 <div class="form-group mb-3">
-    <label class="form-label"> {{ Form::label('Nombre') }}</label>
+    <label class="form-label">{{ Form::label('Nombre') }}</label>
     <div>
         {{ Form::text('Nombre', $product->Nombre, [
             'class' => 'form-control' . ($errors->has('Nombre') ? ' is-invalid' : ''),
@@ -9,7 +9,7 @@
     </div>
 </div>
 <div class="form-group mb-3">
-    <label class="form-label"> {{ Form::label('Descripcion') }}</label>
+    <label class="form-label">{{ Form::label('Descripcion') }}</label>
     <div>
         {{ Form::text('Descripcion', $product->Descripcion, [
             'class' => 'form-control' . ($errors->has('Descripcion') ? ' is-invalid' : ''),
@@ -19,7 +19,7 @@
     </div>
 </div>
 <div class="form-group mb-3">
-    <label class="form-label"> {{ Form::label('Proveedor') }}</label>
+    <label class="form-label">{{ Form::label('Proveedor') }}</label>
     <div>
         {{ Form::text('Proveedor', $product->Proveedor, [
             'class' => 'form-control' . ($errors->has('Proveedor') ? ' is-invalid' : ''),
@@ -29,7 +29,7 @@
     </div>
 </div>
 <div class="form-group mb-3">
-    <label class="form-label"> {{ Form::label('stock') }}</label>
+    <label class="form-label">{{ Form::label('stock') }}</label>
     <div>
         {{ Form::text('stock', $product->stock, [
             'class' => 'form-control' . ($errors->has('stock') ? ' is-invalid' : ''),
@@ -41,7 +41,7 @@
 </div>
 
 <div class="form-group mb-3">
-    <label class="form-label"> {{ Form::label('Precio_compra') }}</label>
+    <label class="form-label">{{ Form::label('Precio_compra') }}</label>
     <div>
         {{ Form::text('Precio_compra', $product->Precio_compra, [
             'class' => 'form-control' . ($errors->has('Precio_compra') ? ' is-invalid' : ''),
@@ -53,7 +53,7 @@
 </div>
 
 <div class="form-group mb-3">
-    <label class="form-label"> {{ Form::label('Precio_venta_(recomendado)') }}</label>
+    <label class="form-label">{{ Form::label('Precio_venta_(recomendado)') }}</label>
     <div>
         {{ Form::text('Precio_venta', $product->Precio_venta, [
             'class' => 'form-control' . ($errors->has('Precio_venta') ? ' is-invalid' : ''),
@@ -87,10 +87,12 @@
         function calculatePPP() {
             const stock = parseFloat(document.getElementById('stock').value) || 0;
             const precioCompra = parseFloat(document.getElementById('Precio_compra').value) || 0;
+            let precioPromedio = 0;
             let precioVenta = 0;
 
             if (stock > 0) {
-                precioVenta = precioCompra / stock;
+                precioPromedio = precioCompra / stock;
+                precioVenta = precioPromedio * 1.10; // Agregar un margen del 10%
             }
 
             document.getElementById('Precio_venta').value = precioVenta.toFixed(2);

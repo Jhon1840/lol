@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\DineroCaja;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Ifsnop\Mysqldump as IMysqldump;
+
+
 /**
  * Class VentaController
  * @package App\Http\Controllers
@@ -118,6 +121,7 @@ class VentaController extends Controller
      */
     public function store(Request $request)
     {
+        DB::beginTransaction();
         try {
             // Validación de los datos recibidos en el formulario
             $request->validate([
@@ -130,16 +134,14 @@ class VentaController extends Controller
                 'productos' => 'required|array',
                 'cambio' => 'nullable|numeric|required_if:metodo_pago,efectivo',
             ]);
-            try {
-                $caja = Caja::findOrFail($request->input('caja_id'));
-            } catch (ModelNotFoundException $e) {
-                return back()->withErrors(['error' => 'No se encontró una caja abierta con el ID especificado.']);
-            }
+    
+            // Obtener la caja
+            $caja = Caja::findOrFail($request->input('caja_id'));
     
             // Creación de la venta
             $venta = new Venta();
             $venta->fecha = $request->fecha;
-            $venta->total = $request->cambio ;
+            $venta->total = $request->total;
             $venta->cliente = $request->Nombre;
             $venta->metodo_pago = $request->metodo_pago;
             $venta->vendedor = $request->user() ? $request->user()->name : null;
@@ -171,16 +173,87 @@ class VentaController extends Controller
                 $detalle->subtotal = $subtotal;
                 $detalle->save();
             }
+    
             if (!is_null($request->cambio)) {
                 $venta->cambio = $request->cambio;
                 $venta->save();
             }
     
+            // Generar la factura
+            $this->generarFactura($request, $venta);
+    
+            DB::commit();
             return redirect()->route('ventas.create')->with('success', 'Venta creada correctamente.');
         } catch (\Exception $e) {
+            DB::rollBack();
             return redirect()->route('ventas.create')->with('error', 'Error al crear la venta: ' . $e->getMessage());
         }
     }
+    
+
+    public function generarFactura(Request $request, Venta $venta)
+    {
+        try {
+            // Asegurarse de que el directorio existe
+            Storage::disk('public')->makeDirectory('facturas');
+    
+            // Crear el objeto del comprador con datos del cliente
+            $buyer = new Party([
+                'name'    => $venta->cliente,
+                'custom_fields' => [
+                    'NIT' => $request->NIT,
+                    'CI'  => $request->CI,
+                ],
+            ]);
+    
+            $user = auth()->user();
+            $seller = new Party([
+                'name'    => $user->name,
+                'custom_fields' => [
+                    'Nro vendedor' => $user->id,
+                ],
+            ]);
+    
+            $fecha = Carbon::parse($venta->fecha);
+    
+            $invoice = Invoice::make()
+                ->buyer($buyer)
+                ->seller($seller)
+                ->date($fecha)
+                ->currencySymbol('BS')
+                ->currencyCode('Bolivianos')
+                ->taxRate(13);
+    
+            foreach ($request->productos as $prod) {
+                $producto = Product::findOrFail($prod['id']);
+                $item = InvoiceItem::make($producto->Nombre)
+                    ->title($producto->Nombre)
+                    ->pricePerUnit($producto->Precio_venta)
+                    ->quantity($prod['cantidad']);
+                
+                $invoice->addItem($item);
+            }
+    
+            $filename = 'factura_' . $venta->id . '_' . date('Y-m-d_H-i-s') . '.pdf';
+            $path = 'facturas/' . $filename;
+    
+            // Guardar el PDF en el sistema de archivos usando el disco `public`
+            Storage::disk('public')->put($path, $invoice->stream());
+    
+            // Guardar la URL del PDF en la base de datos
+            $venta->factura_url = 'storage/' . $path;
+            $venta->save();
+    
+            return $venta->factura_url;
+        } catch (\Exception $e) {
+            Log::error('Error al generar la factura: ' . $e->getMessage());
+            throw new \Exception("No se pudo generar la factura. " . $e->getMessage());
+        }
+    }
+    
+    
+
+
     
     private function guardarPagos($detalleId, $pagos, $tipo)
     {
@@ -311,58 +384,7 @@ public function cancelar(Request $request)
     }
 
     
-    public function generarFactura(Request $request, Venta $venta)
-    {
-        try {
-            
-            // Crear el objeto del comprador con datos del cliente
-            $buyer = new Party([
-                'name' => $venta->cliente,
-                'custom_fields' => [
-                    'NIT' => $request->NIT,
-                    'CI' => $request->CI,
-                ],
-            ]);
     
-            $user = auth()->user();
-    
-            $seller = new Party([
-                'name' => $user->name,
-                'Nro vendedor ' . $user->id,
-            ]);
-    
-            $fecha = Carbon::parse($venta->fecha);
-    
-            $invoice = Invoice::make()
-                ->buyer($buyer)
-                ->seller($seller)
-                ->date($fecha)
-                ->currencySymbol('BS')
-                ->currencyCode('Bolivianos')
-                ->taxRate(13);
-    
-            foreach ($request->productos as $prod) {
-                $producto = Product::findOrFail($prod['id']);
-                $item = InvoiceItem::make($producto->Nombre)
-                    ->title($producto->Nombre)
-                    ->pricePerUnit($producto->Precio_venta)
-                    ->quantity($prod['cantidad']);
-
-                $invoice->addItem($item);
-            }
-
-            $invoice->filename($user->name . '' . $venta->cliente.''.$request->CI);
-            $invoice->save('public'); 
-    
-            $link = $invoice->url();
-            //$invoice ->stream();
-            return $link;
-    
-        } catch (\Exception $e) {
-            Log::error('Error al generar la factura: ' . $e->getMessage());
-            throw new \Exception("No se pudo generar la factura.". $e->getMessage());
-        }
-    }
 
     public function toggleCaja(Request $request)
 {
@@ -411,66 +433,70 @@ public function cancelar(Request $request)
 
 //dd($request->all());
 public function cerrarCaja(Request $request)
-    {
-        DB::beginTransaction();
+{
+    DB::beginTransaction();
+    try {
+        // Validación de datos
+        $validated = $request->validate([
+            'caja_id' => 'required|exists:caja,id',
+            'billetes' => 'array',
+            'monedas' => 'array',
+            'observaciones' => 'nullable|string',
+        ]);
+
+        // Obtener la caja abierta
+        $caja = Caja::find($validated['caja_id']);
+        if (!$caja) {
+            return back()->withErrors(['caja_id' => 'La caja no existe.']);
+        }
+
+        // Calcular el total de billetes y monedas
+        $totalBilletesMonedas = 0;
+        foreach ($validated['billetes'] as $denominacion => $cantidad) {
+            if (!is_null($cantidad)) {
+                $totalBilletesMonedas += $denominacion * $cantidad;
+            }
+        }
+        foreach ($validated['monedas'] as $denominacion => $cantidad) {
+            if (!is_null($cantidad)) {
+                $totalBilletesMonedas += $denominacion * $cantidad;
+            }
+        }
+
+        $caja->estado = 'caja cerrada';
+        $caja->observaciones = $validated['observaciones'];
+        $caja->total_billetes_monedas = $totalBilletesMonedas;
+        $caja->save();
+
         try {
-            // Validación de datos
-            $validated = $request->validate([
-                'caja_id' => 'required|exists:caja,id',
-                'billetes' => 'array',
-                'monedas' => 'array',
-                'observaciones' => 'nullable|string',
-            ]);
+            // Preparar datos para el PDF
+            $billetes = $validated['billetes'];
+            $monedas = $validated['monedas'];
 
-            // Obtener la caja abierta
-            $caja = Caja::find($validated['caja_id']);
-            if (!$caja) {
-                return back()->withErrors(['caja_id' => 'La caja no existe.']);
-            }
+            // Cargar la vista con los datos y generar el PDF
+            $pdf = PDF::loadView('caja_cierre', compact('caja', 'totalBilletesMonedas', 'billetes', 'monedas'));
+            $filename = 'cierre_caja_' . $caja->id . '_' . date('Y-m-d_H-i-s') . '.pdf';
+            $path = public_path('storage/products/' . $filename);
 
-            // Calcular el total de billetes y monedas
-            $totalBilletesMonedas = 0;
-            foreach ($validated['billetes'] as $denominacion => $cantidad) {
-                if (!is_null($cantidad)) {
-                    $totalBilletesMonedas += $denominacion * $cantidad;
-                }
-            }
-            foreach ($validated['monedas'] as $denominacion => $cantidad) {
-                if (!is_null($cantidad)) {
-                    $totalBilletesMonedas += $denominacion * $cantidad;
-                }
-            }
+            // Guardar el PDF en el sistema de archivos
+            $pdf->save($path);
 
-            $caja->estado = 'caja cerrada';
-            $caja->observaciones = $validated['observaciones'];
-            $caja->total_billetes_monedas = $totalBilletesMonedas;
+            // Guardar la URL del PDF en la base de datos
+            $caja->url = '/storage/products/' . $filename;
             $caja->save();
 
-            
-            try {
-                // Preparar datos para el PDF
-                $billetes = $validated['billetes'];
-                $monedas = $validated['monedas'];
-
-                // Cargar la vista con los datos y generar el PDF
-                $pdf = PDF::loadView('caja_cierre', compact('caja', 'totalBilletesMonedas', 'billetes', 'monedas'));
-                $filename = 'cierre_caja_' . $caja->id . '.pdf';
-                $path = storage_path('' . $filename);
-
-                // Guardar el PDF en el sistema de archivos
-                $pdf->save($path);
-            } catch (\Exception $e) {
-                Log::error('Error al generar o guardar el PDF: ' . $e->getMessage());
-                throw new \Exception("Error al generar o guardar el PDF: " . $e->getMessage());
-            }
-
-            DB::commit();
-            return redirect()->route('ventas.create')->with('success', 'Caja cerrada correctamente y PDF generado.');
         } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->route('ventas.create')->with('error', 'Error al cerrar la caja: ' . $e->getMessage());
+            Log::error('Error al generar o guardar el PDF: ' . $e->getMessage());
+            throw new \Exception("Error al generar o guardar el PDF: " . $e->getMessage());
         }
+
+        DB::commit();
+        return redirect()->route('ventas.create')->with('success', 'Caja cerrada correctamente y PDF generado.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return redirect()->route('ventas.create')->with('error', 'Error al cerrar la caja: ' . $e->getMessage());
     }
+}
 
 
 

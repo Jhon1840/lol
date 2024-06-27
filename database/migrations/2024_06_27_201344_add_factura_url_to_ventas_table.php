@@ -4,25 +4,29 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class AddFacturaUrlToVentasTable extends Migration
 {
     /**
      * Run the migrations.
+     *
+     * @return void
      */
-    public function up(): void
+    public function up()
     {
         Schema::table('ventas', function (Blueprint $table) {
-            $table->foreign(['caja_id'], 'fk_ventas_caja')->references(['id'])->on('caja')->onUpdate('cascade')->onDelete('set null');
+            $table->string('factura_url')->nullable()->after('caja_id');
         });
     }
 
     /**
      * Reverse the migrations.
+     *
+     * @return void
      */
-    public function down(): void
+    public function down()
     {
         Schema::table('ventas', function (Blueprint $table) {
-            $table->dropForeign('fk_ventas_caja');
+            $table->dropColumn('factura_url');
         });
     }
-};
+}
