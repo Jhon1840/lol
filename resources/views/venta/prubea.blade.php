@@ -3,15 +3,19 @@
     use App\Models\Product;
     use App\Models\Descuento;
     use Illuminate\Support\Facades\Auth;
+
     $usuarioLogueado = Auth::user();
     $cajaAbierta = Caja::where('nombre_vendedor', $usuarioLogueado->name)
         ->where('estado', 'caja abierta')
         ->latest()
         ->first();
     $dineroCajaAbierta = $cajaAbierta ? $cajaAbierta->dinero : 0;
+
     // Obtener los productos y precios originales
     $products = Product::pluck('Nombre', 'id');
     $preciosOriginales = Product::pluck('Precio_venta', 'id');
+    $productImages = Product::pluck('image_url', 'id'); // Obteniendo URLs de imágenes
+
     // Obtener los descuentos aplicables
     $descuentos = Descuento::where('start_date', '<=', now())
         ->where('end_date', '>=', now())
@@ -29,8 +33,8 @@
             $precios[$id] = $precioOriginal;
         }
     }
-
 @endphp
+
 
 @extends('tablar::page')
 
@@ -85,8 +89,8 @@
                                     data-product-price="{{ $precios[$id] }}" style="cursor: pointer; position: relative;">
                                     <div class="image-container">
                                         <a href="#" class="d-block">
-                                            <img src="https://png.pngtree.com/png-vector/20220519/ourlarge/pngtree-premium-white-icon-with-crown-on-black-background-vector-png-image_46216252.jpg"
-                                                class="card-img-top product-image">
+                                            <img src="{{ $productImages[$id] ?? 'https://png.pngtree.com/png-vector/20220519/ourlarge/pngtree-premium-white-icon-with-crown-on-black-background-vector-png-image_46216252.jpg' }}"
+                                                class="card-img-top product-image" alt="Imagen del producto">
                                         </a>
                                     </div>
                                     <div class="card-body">
@@ -96,21 +100,19 @@
                                                 <del>Precio: ${{ $preciosOriginales[$id] }}</del>
                                             </p>
                                             <p class="text-success">Descuento aplicado:
-                                                ${{ number_format($preciosOriginales[$id] - $precios[$id], 2) }}
-                                            </p>
+                                                ${{ number_format($preciosOriginales[$id] - $precios[$id], 2) }}</p>
                                             <p>Precio con descuento: ${{ $precios[$id] }}</p>
                                         @else
                                             <p>Precio: ${{ $precios[$id] }}</p>
                                         @endif
                                     </div>
                                     @if ($precios[$id] < $preciosOriginales[$id])
-                                        <div class="discount-label bg-danger text-white">
-                                            Descuento
-                                        </div>
+                                        <div class="discount-label bg-danger text-white">Descuento</div>
                                     @endif
                                 </div>
                             </div>
                         @endforeach
+
                     </div>
                 </div>
                 <div class="col-md-4">

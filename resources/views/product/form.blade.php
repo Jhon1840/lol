@@ -65,6 +65,14 @@
     </div>
 </div>
 
+<div class="form-group mb-3">
+    <label class="form-label">{{ Form::label('Imagen del Producto') }}</label>
+    <div>
+        {{ Form::file('image_url', ['class' => 'form-control' . ($errors->has('image_url') ? ' is-invalid' : '')]) }}
+        {!! $errors->first('image_url', '<div class="invalid-feedback">:message</div>') !!}
+    </div>
+</div>
+
 <div class="form-footer">
     <div class="text-end">
         <div class="d-flex">

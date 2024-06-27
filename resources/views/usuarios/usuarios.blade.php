@@ -1,16 +1,24 @@
-<?php
-
-use App\Models\User;
-$users = User::with('roles')->get();
-?>
-
 @extends('tablar::page')
 @section('content')
     <!-- Page header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2 class="page-title">
+                    Gestión de Usuarios
+                </h2>
+            </div>
+            <div class="col-auto">
+                <a href="{{ route('usuarios.create') }}" class="btn btn-primary">
+                    <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+                    <i class="ti ti-plus"></i> Añadir Vendedor
+                </a>
+            </div>
+        </div>
+    </div>
 
     <!-- Page body -->
     <div class="row row-cards">
-
         @foreach ($users as $user)
             <div class="col-md-6 col-lg-3">
                 <div class="card">
@@ -28,17 +36,8 @@ $users = User::with('roles')->get();
                         </div>
                     </div>
                     <div class="d-flex">
-                        <a href="{{ route('usuarios.edit', $user->id) }}" class="card-btn">
-                            <!-- Download SVG icon from http://tabler-icons.io/i/mail -->
-
-                            Editar
-
-                        </a>
-                        <a href="#" class="card-btn">
-                            <!-- Download SVG icon from http://tabler-icons.io/i/phone -->
-
-                            Eliminar
-                        </a>
+                        <a href="{{ route('usuarios.edit', $user->id) }}" class="card-btn">Editar</a>
+                        <a href="#" class="card-btn">Eliminar</a>
                     </div>
                 </div>
             </div>

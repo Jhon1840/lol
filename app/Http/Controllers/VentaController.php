@@ -31,15 +31,35 @@ class VentaController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index()
-    {
-        $ventas = Venta::paginate(10);
-        $cajaActual = Caja::latest()->first(); 
-    
-        $cajaAbierta = $cajaActual ? $cajaActual->estado == 'caja abierta' : false;
-    
-        return view('venta.index', compact('ventas', 'cajaActual', 'cajaAbierta'))
-            ->with('i', (request()->input('page', 1) - 1) * $ventas->perPage());
+{
+    $ventas = Venta::paginate(10);
+    $cajaActual = Caja::latest()->first(); 
+
+    $cajaAbierta = $cajaActual ? $cajaActual->estado == 'caja abierta' : false;
+
+    // Añadiendo información de los productos
+    $products = Product::pluck('Nombre', 'id');
+    $preciosOriginales = Product::pluck('Precio_venta', 'id');
+    $productImages = Product::pluck('image_url', 'id'); // Obteniendo URLs de imágenes
+
+    // Información adicional como descuentos actuales, si necesario
+    $descuentos = Descuento::where('start_date', '<=', now())
+        ->where('end_date', '>=', now())
+        ->get()
+        ->keyBy('product_id');
+
+    $preciosConDescuento = [];
+    foreach ($preciosOriginales as $id => $precio) {
+        $descuentoAplicado = $descuentos[$id] ?? null;
+        $preciosConDescuento[$id] = $descuentoAplicado ?
+            $precio - ($precio * ($descuentoAplicado->discount_percentage / 100)) : $precio;
     }
+
+    return view('venta.index', compact(
+        'ventas', 'cajaActual', 'cajaAbierta', 'products', 'productImages', 'preciosOriginales', 'preciosConDescuento'
+    ))->with('i', (request()->input('page', 1) - 1) * $ventas->perPage());
+}
+
     
 
     /**

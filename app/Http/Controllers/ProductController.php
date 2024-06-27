@@ -63,14 +63,21 @@ class ProductController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
-    {
-        request()->validate(Product::$rules);
+{
+    request()->validate(Product::$rules);
 
-        $product = Product::create($request->all());
+    $product = new Product($request->except(['image_url']));
 
-        return redirect()->route('product.index')
-            ->with('success', 'Product created successfully.');
+    if ($request->hasFile('image_url')) {
+        $path = $request->file('image_url')->store('public/products');
+        $product->image_url = Storage::url($path);
     }
+
+    $product->save();
+
+    return redirect()->route('product.index')
+        ->with('success', 'Product created successfully.');
+}
 
     /**
      * Display the specified resource.

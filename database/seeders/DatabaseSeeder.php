@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-
+use Database\Seeders\AdminUserSeeder;
 class DatabaseSeeder extends Seeder
 {
     /**
@@ -17,9 +17,7 @@ class DatabaseSeeder extends Seeder
         DB::disableQueryLog(); 
 
         // Llama a otros seeders aquí
-        $this->call([
-            // Agrega los nombres de tus otros seeders específicos a ejecutar
-        ]);
+        $this->call(AdminUserSeeder::class);
 
     
     }

@@ -81,11 +81,7 @@
                                     productos
                                 </div>
                                 <div class="ms-auto text-muted">
-                                    Buscar:
-                                    <div class="ms-2 d-inline-block">
-                                        <input type="text" class="form-control form-control-sm"
-                                            aria-label="Search invoice">
-                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -177,7 +173,7 @@
 
 
                         @include('product.components.subir_archivo')
-                       
+
 
                     </div>
                 </div>
